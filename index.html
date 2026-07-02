@@ -1081,11 +1081,31 @@ function dlCSV(csv,name){
 }
 
 // On load — try to restore config
-window.addEventListener('load', () => {
-  const saved=get('bc_backend_config');
-  if(saved){BACKEND=saved.type;SHEETS_URL=saved.sheetsUrl||'';FB_CONFIG=saved.fbConfig||{};}
+window.addEventListener('load', async () => {
+  // Auto-connect to Google Sheets
+  BACKEND = 'sheets';
+  SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxstyO63SCA5O4UUH_5QB2BWo9-nWLTd6_VzU2EG08YEkM3K-hyhprhmscYw3dYMbA/exec';
+  set('bc_backend_config', { type:'sheets', sheetsUrl:SHEETS_URL });
+
   window.addEventListener('online',()=>document.querySelectorAll('.offline-warn').forEach(el=>el.style.display='none'));
   window.addEventListener('offline',()=>document.querySelectorAll('.offline-warn').forEach(el=>el.style.display='block'));
+
+  // Auto-initialize
+  showLoading('Connecting...');
+  try {
+    const [pr, tr] = await Promise.all([apiGetParams(), apiGetTemplates()]);
+    CACHE.params = pr; CACHE.templates = tr;
+    hideLoading();
+    document.getElementById('setupPage').classList.remove('active');
+    showPage('loginPage');
+    document.getElementById('loginBackendLabel').textContent = '📊 Connected to Google Sheets';
+    document.getElementById('cloudBadge').textContent = '📊 Sheets';
+    document.getElementById('cloudBadge').className = 'cloud-badge sheets-badge';
+    document.getElementById('appHeader').style.display = 'block';
+  } catch(e) {
+    hideLoading();
+    showToast('❌ Connection error. Check internet.');
+  }
 });
 </script>
 </body>

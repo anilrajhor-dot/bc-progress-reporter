@@ -324,6 +324,7 @@ tr:hover td{background:var(--sky);}
   <div class="tabs">
     <button class="tab-btn active" onclick="switchAdminTab('overview')">📊 Overview</button>
     <button class="tab-btn" onclick="switchAdminTab('alerts')">🔔 Alerts</button>
+    <button class="tab-btn" onclick="switchAdminTab('dclist')">🗺️ DCs</button>
     <button class="tab-btn" onclick="switchAdminTab('bclist')">👥 BCs</button>
     <button class="tab-btn" onclick="switchAdminTab('settings')">⚙ Settings</button>
   </div>
@@ -347,6 +348,35 @@ tr:hover td{background:var(--sky);}
       <label>District:</label><select id="alertFilterDistrict" onchange="renderAlerts()"><option value="">All</option></select>
     </div>
     <div class="card"><div class="card-title">🔴 BCs Yet to Submit Today</div><div id="alertsList"></div></div>
+  </div>
+
+  <div id="tab-dclist" style="display:none;">
+    <div class="card">
+      <div class="flex-between" style="margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0;">🗺️ District Coordinators (<span id="dcCountLabel">0</span>)</div>
+        <button class="btn btn-sm btn-purple" onclick="toggleAddDC()">＋ Add DC</button>
+      </div>
+      <div id="addDCForm" style="display:none;background:var(--purple-light);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
+        <div class="form-grid">
+          <div class="form-group"><label>DC ID</label><input type="text" id="newDCId" placeholder="DC04" /></div>
+          <div class="form-group"><label>Full Name</label><input type="text" id="newDCName" placeholder="Name" /></div>
+          <div class="form-group"><label>District Name</label><input type="text" id="newDCDistrict" placeholder="e.g. Varanasi" /></div>
+          <div class="form-group"><label>Mobile</label><input type="text" id="newDCMobile" placeholder="10-digit" /></div>
+          <div class="form-group"><label>Email</label><input type="text" id="newDCEmail" placeholder="email" /></div>
+          <div class="form-group"><label>Password</label><input type="text" id="newDCPass" value="dc123" /></div>
+        </div>
+        <div class="flex-row">
+          <button class="btn btn-purple btn-sm" onclick="addDC()">Save DC</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleAddDC()">Cancel</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>DC ID</th><th>Name</th><th>District</th><th>Mobile</th><th>Email</th><th>BCs</th><th>Submitted Today</th><th>Pending</th></tr></thead>
+          <tbody id="dcListBody"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <div id="tab-bclist" style="display:none;">
@@ -992,10 +1022,54 @@ function populateDistrictDropdowns() {
   });
 }
 
+function toggleAddDC(){
+  const f=document.getElementById('addDCForm');
+  f.style.display=f.style.display==='none'?'block':'none';
+}
+
+async function addDC() {
+  const id=document.getElementById('newDCId').value.trim().toUpperCase();
+  const name=document.getElementById('newDCName').value.trim();
+  const district=document.getElementById('newDCDistrict').value.trim();
+  const mobile=document.getElementById('newDCMobile').value.trim();
+  const email=document.getElementById('newDCEmail').value.trim();
+  const pass=document.getElementById('newDCPass').value.trim();
+  if(!id||!name||!district){showToast('❌ DC ID, Name and District required');return;}
+  showLoading('Adding DC...');
+  try {
+    await apiAddUser({id,name,role:'DC',pass:pass||'dc123',mobile,email,district,location:district+' HQ'});
+    const users=await apiGetUsers(); CACHE.users=users;
+    hideLoading(); toggleAddDC(); renderDCList(); renderAdminStats();
+    populateDistrictDropdowns();
+    showToast('✅ DC '+name+' added for '+district);
+  } catch(e){hideLoading();showToast('❌ '+e.message);}
+}
+
+function renderDCList() {
+  const dcs=CACHE.users.filter(u=>u.role==='DC');
+  const bcs=CACHE.users.filter(u=>u.role==='BC');
+  const todayReps=new Set(CACHE.reports.filter(r=>String(r.date)===today()).map(r=>r.bcId));
+  document.getElementById('dcCountLabel').textContent=dcs.length;
+  document.getElementById('dcListBody').innerHTML=dcs.map(dc=>{
+    const myBCs=bcs.filter(b=>b.district===dc.district);
+    const sub=myBCs.filter(b=>todayReps.has(b.id)).length;
+    const pend=myBCs.length-sub;
+    return `<tr>
+      <td><b>${dc.id}</b></td><td>${dc.name}</td>
+      <td><span class="district-pill">🗺 ${dc.district}</span></td>
+      <td>${dc.mobile||'—'}</td><td>${dc.email||'—'}</td>
+      <td style="text-align:center;">${myBCs.length}</td>
+      <td style="text-align:center;"><span class="badge badge-green">${sub} ✅</span></td>
+      <td style="text-align:center;">${pend>0?`<span class="badge badge-red">${pend} ⏳</span>`:`<span class="badge badge-green">0 ✅</span>`}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--gray-400);padding:20px;">No DCs yet. Add your first DC above.</td></tr>';
+}
+
 function switchAdminTab(tab) {
-  ['overview','alerts','bclist','settings'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
-  document.querySelectorAll('#adminPage .tab-btn').forEach((b,i)=>b.classList.toggle('active',['overview','alerts','bclist','settings'][i]===tab));
+  ['overview','alerts','dclist','bclist','settings'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
+  document.querySelectorAll('#adminPage .tab-btn').forEach((b,i)=>b.classList.toggle('active',['overview','alerts','dclist','bclist','settings'][i]===tab));
   if(tab==='alerts') renderAlerts();
+  if(tab==='dclist') renderDCList();
   if(tab==='bclist') renderBCList();
   if(tab==='settings'){renderParams();loadTemplates();}
 }

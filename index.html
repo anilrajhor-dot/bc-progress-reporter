@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1a3a5c">
+<title>BC Progress Reporter — Cloud Version</title>
+<style>
+:root {
+  --navy:#1a3a5c; --blue:#2563eb; --sky:#e8f1fb;
+  --green:#16a34a; --green-light:#dcfce7;
+  --amber:#d97706; --amber-light:#fef3c7;
+  --red:#dc2626; --red-light:#fee2e2;
+  --purple:#7c3aed; --purple-light:#ede9fe;
+  --gray-50:#f8fafc; --gray-100:#f1f5f9; --gray-200:#e2e8f0;
+  --gray-400:#94a3b8; --gray-600:#475569; --gray-800:#1e293b;
+  --radius:10px; --shadow:0 2px 12px rgba(0,0,0,.08); --shadow-lg:0 8px 30px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--gray-100);color:var(--gray-800);min-height:100vh;font-size:14px;}
+
+/* SETUP PAGE */
+.setup-wrap{min-height:100vh;background:linear-gradient(160deg,#0f2744,#1a3a5c 50%,#2563eb);display:flex;align-items:center;justify-content:center;padding:20px;}
+.setup-card{background:#fff;border-radius:18px;padding:36px 32px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.setup-logo{width:60px;height:60px;background:linear-gradient(135deg,#1a3a5c,#2563eb);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 18px;}
+.setup-card h2{text-align:center;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:4px;}
+.setup-card .sub{text-align:center;color:var(--gray-600);font-size:13px;margin-bottom:24px;}
+.backend-tabs{display:flex;gap:8px;margin-bottom:20px;}
+.btab{flex:1;padding:12px 8px;border-radius:var(--radius);border:2px solid var(--gray-200);cursor:pointer;text-align:center;font-size:13px;font-weight:600;transition:all .2s;background:#fff;}
+.btab .icon{font-size:22px;display:block;margin-bottom:4px;}
+.btab.active.sheets{border-color:#16a34a;background:#dcfce7;color:#16a34a;}
+.btab.active.firebase{border-color:#f97316;background:#fff7ed;color:#c2410c;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:11px;font-weight:700;color:var(--gray-600);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+.form-group input{width:100%;padding:10px 13px;border:1.5px solid var(--gray-200);border-radius:var(--radius);font-size:13px;font-family:inherit;background:var(--gray-50);transition:border .2s;}
+.form-group input:focus{outline:none;border-color:var(--blue);background:#fff;}
+.form-group .hint{font-size:11px;color:var(--gray-400);margin-top:4px;}
+.step-box{background:var(--gray-50);border-radius:var(--radius);padding:14px;margin-bottom:16px;border:1px solid var(--gray-200);}
+.step-box h4{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
+.step-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px;}
+.step-num{width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-item p{font-size:12px;color:var(--gray-600);line-height:1.5;}
+.step-item code{background:#e8f1fb;padding:2px 5px;border-radius:4px;font-size:11px;color:var(--blue);font-family:monospace;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:var(--radius);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;font-family:inherit;text-decoration:none;}
+.btn-primary{background:var(--blue);color:#fff;width:100%;padding:13px;font-size:15px;}
+.btn-primary:hover{background:#1d4ed8;}
+.btn-sm{padding:6px 13px;font-size:12px;}
+.btn-outline{background:#fff;border:1.5px solid var(--gray-200);color:var(--gray-800);}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-purple{background:var(--purple);color:#fff;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--navy),#2563eb);color:#fff;padding:0 16px;display:flex;align-items:center;justify-content:space-between;height:54px;box-shadow:var(--shadow);position:sticky;top:0;z-index:100;}
+.header-brand{display:flex;align-items:center;gap:10px;}
+.header-logo{width:32px;height:32px;background:rgba(255,255,255,.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.header-brand h1{font-size:14px;font-weight:700;}
+.header-brand p{font-size:11px;opacity:.75;}
+.header-user{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);padding:5px 11px;border-radius:20px;cursor:pointer;font-size:12px;}
+.header-user:hover{background:rgba(255,255,255,.25);}
+.cloud-badge{font-size:10px;padding:2px 8px;border-radius:8px;font-weight:700;margin-left:6px;}
+.sheets-badge{background:#dcfce7;color:#16a34a;}
+.firebase-badge{background:#fff7ed;color:#c2410c;}
+
+/* PAGES */
+.page{display:none;}.page.active{display:block;}
+.main{padding:16px;max-width:1200px;margin:0 auto;}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:12px;}
+.spinner{width:40px;height:40px;border:4px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-overlay p{font-size:14px;color:var(--gray-600);font-weight:500;}
+
+/* CARDS */
+.card{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px;}
+.card-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px;}
+.stat-card{background:#fff;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);border-left:3px solid var(--blue);}
+.stat-card.green{border-color:var(--green);} .stat-card.red{border-color:var(--red);} .stat-card.amber{border-color:var(--amber);} .stat-card.purple{border-color:var(--purple);}
+.stat-card .lbl{font-size:10px;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;}
+.stat-card .val{font-size:24px;font-weight:700;color:var(--gray-800);margin-top:3px;}
+.stat-card .sub2{font-size:10px;color:var(--gray-400);margin-top:1px;}
+.prog-bar-wrap{background:var(--gray-200);border-radius:6px;height:5px;margin-top:5px;}
+.prog-bar{height:5px;border-radius:6px;background:var(--blue);transition:width .5s;}
+
+/* ENTRY */
+.entry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;}
+.entry-item{background:var(--gray-50);border-radius:var(--radius);padding:12px;border:1.5px solid var(--gray-200);}
+.entry-item label{display:block;font-size:10px;font-weight:700;color:var(--gray-600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+.entry-item .eicon{font-size:18px;margin-bottom:3px;}
+.entry-item input[type=number]{width:100%;padding:8px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:20px;font-weight:700;text-align:center;font-family:inherit;background:#fff;color:var(--navy);transition:border .2s;}
+.entry-item input[type=number]:focus{outline:none;border-color:var(--blue);}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+td{padding:8px 10px;border-bottom:1px solid var(--gray-200);}
+tr:hover td{background:var(--sky);}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.badge-green{background:var(--green-light);color:var(--green);}
+.badge-red{background:var(--red-light);color:var(--red);}
+.badge-amber{background:var(--amber-light);color:var(--amber);}
+.badge-purple{background:var(--purple-light);color:var(--purple);}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:var(--gray-100);border-radius:var(--radius);padding:3px;margin-bottom:14px;flex-wrap:wrap;}
+.tab-btn{flex:1;min-width:70px;padding:8px 8px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:transparent;font-family:inherit;transition:all .2s;color:var(--gray-600);white-space:nowrap;}
+.tab-btn.active{background:#fff;color:var(--navy);font-weight:700;box-shadow:var(--shadow);}
+
+/* ALERTS */
+.alert-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:8px;background:var(--red-light);margin-bottom:7px;gap:10px;flex-wrap:wrap;}
+.alert-item .bc-name{font-weight:700;font-size:12px;color:var(--red);}
+.alert-item .bc-id{font-size:10px;color:var(--gray-600);}
+.alert-actions{display:flex;gap:5px;flex-wrap:wrap;}
+
+/* FILTER */
+.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;padding:12px 14px;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px;}
+.filter-bar label{font-size:11px;font-weight:700;color:var(--gray-600);}
+.filter-bar input[type=date],.filter-bar select{padding:6px 9px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:12px;font-family:inherit;}
+
+/* HISTORY */
+.history-row{display:flex;gap:8px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--gray-200);}
+.history-date{font-size:10px;font-weight:700;color:var(--gray-600);background:var(--sky);padding:3px 7px;border-radius:5px;white-space:nowrap;min-width:72px;text-align:center;}
+.history-chips{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{font-size:10px;padding:2px 7px;border-radius:8px;background:var(--sky);color:var(--navy);font-weight:600;}
+
+/* MISC */
+.divider{height:1px;background:var(--gray-200);margin:14px 0;}
+.text-muted{color:var(--gray-400);font-size:11px;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.flex-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.mt-8{margin-top:8px;}
+.banner{border-radius:var(--radius);padding:14px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.banner-navy{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;}
+.banner-purple{background:linear-gradient(135deg,var(--purple),#a855f7);color:#fff;}
+.banner h3{font-size:15px;font-weight:700;}
+.banner p{font-size:11px;opacity:.8;margin-top:2px;}
+.submitted-ok{background:var(--green-light);color:var(--green);padding:9px 14px;border-radius:var(--radius);font-size:12px;font-weight:700;text-align:center;margin-bottom:14px;}
+.scheme-param{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--gray-200);}
+.scheme-param:last-child{border-bottom:none;}
+.district-pill{display:inline-flex;align-items:center;gap:4px;background:var(--purple-light);color:var(--purple);padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy);color:#fff;padding:10px 20px;border-radius:30px;font-size:12px;font-weight:700;box-shadow:var(--shadow-lg);z-index:9999;transition:transform .3s;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+@media(max-width:600px){
+  .main{padding:10px;} .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .entry-grid{grid-template-columns:repeat(2,1fr);} .form-grid{grid-template-columns:1fr 1fr;}
+}
+.offline-warn{background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:11px;color:#854d0e;margin-bottom:12px;display:none;}
+.syncing{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--amber);}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingOverlay" class="loading-overlay" style="display:none;">
+  <div class="spinner"></div>
+  <p id="loadingMsg">Loading...</p>
+</div>
+
+<!-- ══ SETUP PAGE ══ -->
+<div id="setupPage" class="page active">
+<div class="setup-wrap">
+<div class="setup-card">
+  <div class="setup-logo">🏦</div>
+  <h2>BC Progress Reporter</h2>
+  <p class="sub">Cloud Setup — Connect your backend once, use forever</p>
+
+  <div class="backend-tabs">
+    <div class="btab active sheets" id="btab_sheets" onclick="selectBackend('sheets')">
+      <span class="icon">📊</span>Google Sheets<br><small>Free · Easy</small>
+    </div>
+    <div class="btab firebase" id="btab_firebase" onclick="selectBackend('firebase')">
+      <span class="icon">🔥</span>Firebase<br><small>Free · Real-time</small>
+    </div>
+  </div>
+
+  <!-- SHEETS SETUP -->
+  <div id="sheetsSetup">
+    <div class="step-box">
+      <h4>📋 One-time Setup Steps</h4>
+      <div class="step-item"><div class="step-num">1</div><p>Open <b>Google Sheets</b> → create a new blank spreadsheet</p></div>
+      <div class="step-item"><div class="step-num">2</div><p>Click <b>Extensions → Apps Script</b></p></div>
+      <div class="step-item"><div class="step-num">3</div><p>Paste the <code>BC_GoogleAppsScript_Backend.js</code> file contents, click <b>Save</b></p></div>
+      <div class="step-item"><div class="step-num">4</div><p>Click <b>Deploy → New deployment → Web App → Execute as Me → Anyone → Deploy</b></p></div>
+      <div class="step-item"><div class="step-num">5</div><p>Copy the <b>Web App URL</b> and paste below</p></div>
+    </div>
+    <div class="form-group">
+      <label>Google Apps Script Web App URL</label>
+      <input type="text" id="sheetsUrl" placeholder="https://script.google.com/macros/s/AKfy.../exec" />
+      <div class="hint">Paste the URL you got after deploying the Apps Script</div>
+    </div>
+    <button class="btn btn-primary" style="background:#16a34a;" onclick="connectSheets()">📊 Connect Google Sheets</button>
+  </div>
+
+  <!-- FIREBASE SETUP -->
+  <div id="firebaseSetup" style="display:none;">
+    <div class="step-box">
+      <h4>🔥 One-time Setup Steps</h4>
+      <div class="step-item"><div class="step-num">1</div><p>Go to <b>console.firebase.google.com</b> → Create project (free)</p></div>
+      <div class="step-item"><div class="step-num">2</div><p>Click <b>Firestore Database → Create database → Start in test mode</b></p></div>
+      <div class="step-item"><div class="step-num">3</div><p>Go to <b>Project Settings → Your apps → Web app → Register app</b></p></div>
+      <div class="step-item"><div class="step-num">4</div><p>Copy the <b>firebaseConfig</b> values and paste below</p></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Project ID</label><input type="text" id="fbProjectId" placeholder="my-bc-app" /></div>
+      <div class="form-group"><label>API Key</label><input type="text" id="fbApiKey" placeholder="AIza..." /></div>
+      <div class="form-group"><label>App ID</label><input type="text" id="fbAppId" placeholder="1:123:web:abc" /></div>
+    </div>
+    <button class="btn btn-primary" style="background:#ea580c;" onclick="connectFirebase()">🔥 Connect Firebase</button>
+  </div>
+
+  <div class="divider"></div>
+  <p style="text-align:center;font-size:11px;color:var(--gray-400);">Already configured? <a href="#" onclick="loadSavedConfig()" style="color:var(--blue);">Load saved settings</a></p>
+</div>
+</div>
+</div>
+
+<!-- ══ APP HEADER ══ -->
+<div id="appHeader" style="display:none;">
+<div class="header">
+  <div class="header-brand">
+    <div class="header-logo">🏦</div>
+    <div>
+      <h1>BC Progress Reporter
+        <span class="cloud-badge" id="cloudBadge"></span>
+      </h1>
+      <p id="headerSub">—</p>
+    </div>
+  </div>
+  <div class="header-user" onclick="doLogout()">
+    <span id="headerUser">—</span> ⎋
+  </div>
+</div>
+</div>
+
+<!-- ══ LOGIN PAGE ══ -->
+<div id="loginPage" class="page">
+<div class="setup-wrap">
+<div class="setup-card">
+  <div class="setup-logo">🏦</div>
+  <h2>BC Progress Reporter</h2>
+  <p class="sub" id="loginBackendLabel">—</p>
+  <div id="offlineWarn" class="offline-warn">⚠ You appear to be offline. Please check your internet connection.</div>
+  <div class="backend-tabs" style="margin-bottom:16px;">
+    <div class="btab active" id="rtab_BC" onclick="selRole('BC')"><span class="icon">👤</span>BC</div>
+    <div class="btab" id="rtab_DC" onclick="selRole('DC')"><span class="icon">🗺️</span>District Coord.</div>
+    <div class="btab" id="rtab_ADMIN" onclick="selRole('ADMIN')"><span class="icon">📊</span>Admin</div>
+  </div>
+  <div class="form-group"><label>User ID</label><input type="text" id="loginId" placeholder="BC001 / DC01 / ADMIN" /></div>
+  <div class="form-group"><label>Password</label><input type="password" id="loginPass" placeholder="Password" /></div>
+  <button class="btn btn-primary" onclick="doLogin()">🔐 Login</button>
+  <p style="text-align:center;font-size:11px;color:var(--gray-400);margin-top:12px;"><a href="#" onclick="showSetup()" style="color:var(--blue);">⚙ Change backend settings</a></p>
+</div>
+</div>
+</div>
+
+<!-- ══ BC PAGE ══ -->
+<div id="bcPage" class="page">
+<div class="main">
+  <div class="banner banner-navy">
+    <div><h3 id="bcWelcome">Welcome</h3><p id="bcDate">—</p></div>
+    <div style="text-align:right;"><div style="font-size:22px;font-weight:700;" id="bcStreak">0🔥</div><div style="font-size:10px;opacity:.8;">Day Streak</div></div>
+  </div>
+  <div id="bcSubmittedOk" class="submitted-ok" style="display:none;">✅ Today's report submitted. You can update it below.</div>
+  <div id="offlineWarnBC" class="offline-warn">⚠ Offline — cannot submit. Please check internet.</div>
+  <div class="card">
+    <div class="card-title">📝 Today's Report Entry</div>
+    <div class="entry-grid" id="entryGrid"></div>
+    <div style="margin-top:14px;">
+      <div class="form-group"><label>Remarks (Optional)</label><input type="text" id="bcRemarks" placeholder="Issues, achievements, observations..." /></div>
+      <button class="btn btn-primary" onclick="submitBCReport()">📤 Submit Today's Report</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📅 My Submission History</div>
+    <div id="bcHistory"><p class="text-muted">Loading...</p></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ DC PAGE ══ -->
+<div id="dcPage" class="page">
+<div class="main">
+  <div class="banner banner-purple">
+    <div><h3 id="dcWelcome">Welcome, Coordinator</h3><p id="dcInfo">—</p></div>
+    <div style="text-align:right;"><div style="font-size:20px;font-weight:700;" id="dcBCCount">—</div><div style="font-size:10px;opacity:.8;">BCs Under You</div></div>
+  </div>
+  <div class="stats-grid" id="dcStats"></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchDCTab('overview')">📊 BC Progress</button>
+    <button class="tab-btn" onclick="switchDCTab('alerts')">🔔 Pending</button>
+  </div>
+  <div id="dctab-overview">
+    <div class="filter-bar">
+      <label>Date:</label><input type="date" id="dcFilterDate" onchange="renderDCOverview()" />
+      <button class="btn btn-sm btn-outline" onclick="dcSetToday()">Today</button>
+      <button class="btn btn-sm btn-outline" onclick="dcSetYesterday()">Yesterday</button>
+      <button class="btn btn-sm btn-outline" onclick="renderDCOverview()">🔄 Refresh</button>
+    </div>
+    <div class="card">
+      <div class="card-title flex-between">
+        <span>📋 My BCs Progress</span>
+        <button class="btn btn-sm btn-outline" onclick="exportDCCSV()">⬇ CSV</button>
+      </div>
+      <div class="table-wrap"><table><thead id="dcTHead"></thead><tbody id="dcTBody"></tbody></table></div>
+    </div>
+  </div>
+  <div id="dctab-alerts" style="display:none;">
+    <div class="card"><div class="card-title">🔴 My BCs — Pending Today</div><div id="dcAlertsList"></div></div>
+  </div>
+</div>
+</div>
+
+<!-- ══ ADMIN PAGE ══ -->
+<div id="adminPage" class="page">
+<div class="main">
+  <div class="stats-grid" id="adminStats"></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchAdminTab('overview')">📊 Overview</button>
+    <button class="tab-btn" onclick="switchAdminTab('alerts')">🔔 Alerts</button>
+    <button class="tab-btn" onclick="switchAdminTab('bclist')">👥 BCs</button>
+    <button class="tab-btn" onclick="switchAdminTab('settings')">⚙ Settings</button>
+  </div>
+
+  <div id="tab-overview">
+    <div class="filter-bar">
+      <label>Date:</label><input type="date" id="filterDate" onchange="renderAdminOverview()" />
+      <label>District:</label><select id="filterDistrict" onchange="renderAdminOverview()"><option value="">All</option></select>
+      <button class="btn btn-sm btn-outline" onclick="setFilterToday()">Today</button>
+      <button class="btn btn-sm btn-outline" onclick="setFilterYesterday()">Yesterday</button>
+      <button class="btn btn-sm btn-outline" onclick="refreshAll()">🔄 Refresh</button>
+    </div>
+    <div class="card">
+      <div class="card-title flex-between"><span>📋 BC-wise Progress</span><button class="btn btn-sm btn-outline" onclick="exportCSV()">⬇ CSV</button></div>
+      <div class="table-wrap"><table><thead id="adminTHead"></thead><tbody id="adminTBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="tab-alerts" style="display:none;">
+    <div class="filter-bar">
+      <label>District:</label><select id="alertFilterDistrict" onchange="renderAlerts()"><option value="">All</option></select>
+    </div>
+    <div class="card"><div class="card-title">🔴 BCs Yet to Submit Today</div><div id="alertsList"></div></div>
+  </div>
+
+  <div id="tab-bclist" style="display:none;">
+    <div class="card">
+      <div class="flex-between" style="margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0;">👥 All BCs (<span id="bcCountLabel">0</span>)</div>
+        <button class="btn btn-sm btn-green" onclick="toggleAddBC()">＋ Add BC</button>
+      </div>
+      <div id="addBCForm" style="display:none;background:var(--green-light);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
+        <div class="form-grid">
+          <div class="form-group"><label>BC ID</label><input type="text" id="newBCId" placeholder="BC005" /></div>
+          <div class="form-group"><label>Full Name</label><input type="text" id="newBCName" placeholder="Name" /></div>
+          <div class="form-group"><label>District</label><select id="newBCDistrict"></select></div>
+          <div class="form-group"><label>Location</label><input type="text" id="newBCLocation" placeholder="Village" /></div>
+          <div class="form-group"><label>Mobile</label><input type="text" id="newBCMobile" placeholder="10-digit" /></div>
+          <div class="form-group"><label>Email</label><input type="text" id="newBCEmail" placeholder="email" /></div>
+          <div class="form-group"><label>Password</label><input type="text" id="newBCPass" value="pass123" /></div>
+        </div>
+        <div class="flex-row">
+          <button class="btn btn-green btn-sm" onclick="addBC()">Save BC</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleAddBC()">Cancel</button>
+        </div>
+      </div>
+      <div class="filter-bar" style="margin-bottom:10px;">
+        <label>District:</label><select id="bcFilterDistrict" onchange="renderBCList()"><option value="">All</option></select>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>BC ID</th><th>Name</th><th>District</th><th>Location</th><th>Mobile</th><th>Today</th></tr></thead>
+        <tbody id="bcListBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-settings" style="display:none;">
+    <div class="card">
+      <div class="card-title">⚙ Reporting Parameters</div>
+      <div id="paramsList"></div>
+      <div class="divider"></div>
+      <div class="flex-row" style="margin-top:6px;">
+        <input type="text" id="newParamName" placeholder="New parameter..." style="flex:1;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;" />
+        <input type="text" id="newParamIcon" placeholder="🔖" style="width:50px;padding:8px;border:1.5px solid var(--gray-200);border-radius:8px;text-align:center;" />
+        <button class="btn btn-green btn-sm" onclick="addParam()">＋ Add</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔔 Alert Templates</div>
+      <div class="form-group"><label>WhatsApp Template</label><textarea id="waTemplate" style="width:100%;padding:9px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:12px;height:70px;resize:vertical;"></textarea></div>
+      <div class="form-group"><label>Email Template</label><textarea id="emailTemplate" style="width:100%;padding:9px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:12px;height:70px;resize:vertical;"></textarea></div>
+      <button class="btn btn-primary" style="width:auto;" onclick="saveTemplates()">💾 Save Templates</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+//  CONFIG & STATE
+// ═══════════════════════════════════════════
+let BACKEND = null; // 'sheets' or 'firebase'
+let SHEETS_URL = '';
+let FB_CONFIG = {};
+let CU = null;
+let CACHE = { users:[], reports:[], params:[], templates:{} };
+
+const today = () => new Date().toISOString().split('T')[0];
+const fmtDate = d => { if(!d)return''; const dt=new Date(d+'T00:00:00'); return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); };
+const get = k => { try{return JSON.parse(localStorage.getItem(k))||null;}catch{return null;} };
+const set = (k,v) => localStorage.setItem(k,JSON.stringify(v));
+
+// ═══════════════════════════════════════════
+//  BACKEND SELECTION & CONFIG
+// ═══════════════════════════════════════════
+let selBackendType = 'sheets';
+function selectBackend(type) {
+  selBackendType = type;
+  document.getElementById('btab_sheets').classList.toggle('active', type==='sheets');
+  document.getElementById('btab_firebase').classList.toggle('active', type==='firebase');
+  document.getElementById('sheetsSetup').style.display = type==='sheets'?'block':'none';
+  document.getElementById('firebaseSetup').style.display = type==='firebase'?'block':'none';
+}
+
+function loadSavedConfig() {
+  const saved = get('bc_backend_config');
+  if (!saved) { showToast('❌ No saved config found'); return; }
+  BACKEND = saved.type; SHEETS_URL = saved.sheetsUrl||''; FB_CONFIG = saved.fbConfig||{};
+  initBackend();
+}
+
+async function connectSheets() {
+  const url = document.getElementById('sheetsUrl').value.trim();
+  if (!url || !url.includes('script.google.com')) { showToast('❌ Please enter a valid Apps Script URL'); return; }
+  SHEETS_URL = url; BACKEND = 'sheets';
+  showLoading('Testing connection...');
+  try {
+    const res = await sheetsAPI({ action:'getParams' });
+    if (res.error) throw new Error(res.error);
+    set('bc_backend_config', { type:'sheets', sheetsUrl:url });
+    hideLoading(); initBackend();
+  } catch(e) {
+    hideLoading(); showToast('❌ Connection failed: ' + e.message);
+  }
+}
+
+async function connectFirebase() {
+  const projectId = document.getElementById('fbProjectId').value.trim();
+  const apiKey    = document.getElementById('fbApiKey').value.trim();
+  const appId     = document.getElementById('fbAppId').value.trim();
+  if (!projectId||!apiKey) { showToast('❌ Project ID and API Key are required'); return; }
+  FB_CONFIG = { projectId, apiKey, appId }; BACKEND = 'firebase';
+  showLoading('Testing Firebase connection...');
+  try {
+    await fbInit();
+    const params = await fbGet('params');
+    if (!params) await fbSeedDefaults();
+    set('bc_backend_config', { type:'firebase', fbConfig:FB_CONFIG });
+    hideLoading(); initBackend();
+  } catch(e) {
+    hideLoading(); showToast('❌ Firebase connection failed: ' + e.message);
+  }
+}
+
+async function initBackend() {
+  if (BACKEND === 'firebase') await fbInit();
+  showLoading('Loading...');
+  try {
+    const [pr, tr] = await Promise.all([apiGetParams(), apiGetTemplates()]);
+    CACHE.params = pr; CACHE.templates = tr;
+    hideLoading(); showPage('loginPage');
+    document.getElementById('setupPage').classList.remove('active');
+    document.getElementById('loginBackendLabel').textContent = BACKEND==='sheets' ? '📊 Connected to Google Sheets' : '🔥 Connected to Firebase';
+    document.getElementById('cloudBadge').textContent = BACKEND==='sheets'?'📊 Sheets':'🔥 Firebase';
+    document.getElementById('cloudBadge').className = 'cloud-badge ' + (BACKEND==='sheets'?'sheets-badge':'firebase-badge');
+    document.getElementById('appHeader').style.display = 'block';
+  } catch(e) {
+    hideLoading(); showToast('❌ Failed to load: ' + e.message);
+  }
+}
+
+function showSetup() { showPage('setupPage'); }
+
+// ═══════════════════════════════════════════
+//  GOOGLE SHEETS API
+// ═══════════════════════════════════════════
+async function sheetsAPI(body) {
+  const res = await fetch(SHEETS_URL, {
+    method:'POST', redirect:'follow',
+    headers:{'Content-Type':'text/plain'},
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+// ═══════════════════════════════════════════
+//  FIREBASE API (REST — no SDK needed)
+// ═══════════════════════════════════════════
+const fbBase = () => `https://firestore.googleapis.com/v1/projects/${FB_CONFIG.projectId}/databases/(default)/documents`;
+const fbKey = () => `?key=${FB_CONFIG.apiKey}`;
+
+async function fbInit() {
+  // Just validate config is set — REST API needs no init
+  if (!FB_CONFIG.projectId) throw new Error('Firebase not configured');
+}
+
+function toFbValue(v) {
+  if (typeof v === 'number') return { integerValue: String(v) };
+  if (typeof v === 'boolean') return { booleanValue: v };
+  if (typeof v === 'object' && v!==null) return { mapValue: { fields: Object.fromEntries(Object.entries(v).map(([k,val])=>[k,toFbValue(val)])) } };
+  return { stringValue: String(v||'') };
+}
+function fromFbValue(v) {
+  if ('integerValue' in v) return parseInt(v.integerValue);
+  if ('doubleValue' in v) return v.doubleValue;
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('stringValue' in v) return v.stringValue;
+  if ('mapValue' in v) return Object.fromEntries(Object.entries(v.mapValue.fields||{}).map(([k,val])=>[k,fromFbValue(val)]));
+  if ('arrayValue' in v) return (v.arrayValue.values||[]).map(fromFbValue);
+  return null;
+}
+function fromFbDoc(doc) {
+  if (!doc || !doc.fields) return null;
+  const obj = Object.fromEntries(Object.entries(doc.fields).map(([k,v])=>[k,fromFbValue(v)]));
+  obj._id = doc.name.split('/').pop();
+  return obj;
+}
+
+async function fbGet(collection, docId) {
+  const url = docId
+    ? `${fbBase()}/${collection}/${docId}${fbKey()}`
+    : `${fbBase()}/${collection}${fbKey()}`;
+  const res = await fetch(url);
+  if (!res.ok) return docId ? null : [];
+  const data = await res.json();
+  if (docId) return fromFbDoc(data);
+  return (data.documents||[]).map(fromFbDoc);
+}
+
+async function fbSet(collection, docId, fields) {
+  const body = { fields: Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,toFbValue(v)])) };
+  const res = await fetch(`${fbBase()}/${collection}/${docId}${fbKey()}`, {
+    method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error('Firebase write failed');
+  return res.json();
+}
+
+async function fbAdd(collection, fields) {
+  const body = { fields: Object.fromEntries(Object.entries(fields).map(([k,v])=>[k,toFbValue(v)])) };
+  const res = await fetch(`${fbBase()}/${collection}${fbKey()}`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error('Firebase add failed');
+  return res.json();
+}
+
+async function fbSeedDefaults() {
+  const now = new Date().toISOString();
+  const users = [
+    {id:'ADMIN',name:'Admin',role:'ADMIN',pass:'admin123',mobile:'9999900000',email:'admin@corporatebc.in',district:'',location:'HO'},
+    {id:'DC01',name:'Anand Mishra',role:'DC',pass:'dc123',mobile:'9811100001',email:'anand@bc.in',district:'Varanasi',location:'Varanasi HQ'},
+    {id:'DC02',name:'Kavita Sharma',role:'DC',pass:'dc123',mobile:'9811100002',email:'kavita@bc.in',district:'Mirzapur',location:'Mirzapur HQ'},
+    {id:'BC001',name:'Ramesh Kumar',role:'BC',pass:'pass123',mobile:'9876543210',email:'ramesh@bc.in',district:'Varanasi',location:'Sarnath'},
+    {id:'BC002',name:'Sunita Devi',role:'BC',pass:'pass123',mobile:'9876543211',email:'sunita@bc.in',district:'Varanasi',location:'Ramnagar'},
+    {id:'BC003',name:'Priya Singh',role:'BC',pass:'pass123',mobile:'9876543212',email:'priya@bc.in',district:'Mirzapur',location:'Chunar'},
+  ];
+  for (const u of users) await fbSet('users', u.id, {...u, createdAt:now});
+  const params = [{id:'accounts',label:'Accounts Opened',icon:'🏦'},{id:'pmjjby',label:'PMJJBY Enrolled',icon:'🛡️'},{id:'pmsby',label:'PMSBY Enrolled',icon:'⛑️'},{id:'apy',label:'APY Enrolled',icon:'🏛️'},{id:'rekyc',label:'Re-KYC Done',icon:'🪪'}];
+  await fbSet('config', 'params', { list: JSON.stringify(params) });
+  await fbSet('config', 'templates', { wa:'Dear {name} (ID: {id}), your daily progress report for {date} is pending. — Corporate BC', email:'Dear {name},\n\nYour report for {date} is pending.\n\nRegards,\nCorporate BC Management' });
+}
+
+// ═══════════════════════════════════════════
+//  UNIFIED API LAYER
+// ═══════════════════════════════════════════
+async function apiLogin(id, pass) {
+  if (BACKEND==='sheets') {
+    const r = await sheetsAPI({action:'login',id,pass});
+    if (r.error) throw new Error(r.error);
+    return r.user;
+  } else {
+    const user = await fbGet('users', id);
+    if (!user || user.pass !== pass) throw new Error('Invalid ID or Password');
+    const { pass:_, ...safe } = user; return safe;
+  }
+}
+
+async function apiGetUsers(role) {
+  if (BACKEND==='sheets') {
+    const r = await sheetsAPI({action:'getUsers',role});
+    return r.users||[];
+  } else {
+    const all = await fbGet('users');
+    return (all||[]).filter(u=>!role||u.role===role).map(({pass,...s})=>s);
+  }
+}
+
+async function apiAddUser(user) {
+  if (BACKEND==='sheets') {
+    const r = await sheetsAPI({action:'addUser',user});
+    if (r.error) throw new Error(r.error);
+  } else {
+    const existing = await fbGet('users', user.id);
+    if (existing) throw new Error('ID already exists');
+    await fbSet('users', user.id, {...user, createdAt:new Date().toISOString()});
+  }
+}
+
+async function apiGetParams() {
+  if (BACKEND==='sheets') {
+    const r = await sheetsAPI({action:'getParams'});
+    return r.params||[];
+  } else {
+    const doc = await fbGet('config','params');
+    if (!doc||!doc.list) return [{id:'accounts',label:'Accounts Opened',icon:'🏦'},{id:'pmjjby',label:'PMJJBY Enrolled',icon:'🛡️'},{id:'pmsby',label:'PMSBY Enrolled',icon:'⛑️'},{id:'apy',label:'APY Enrolled',icon:'🏛️'},{id:'rekyc',label:'Re-KYC Done',icon:'🪪'}];
+    return JSON.parse(doc.list);
+  }
+}
+
+async function apiSaveParams(params) {
+  if (BACKEND==='sheets') { await sheetsAPI({action:'saveParams',params}); }
+  else { await fbSet('config','params',{list:JSON.stringify(params)}); }
+}
+
+async function apiGetTemplates() {
+  if (BACKEND==='sheets') { const r=await sheetsAPI({action:'getTemplates'}); return r.templates||{}; }
+  else { const doc=await fbGet('config','templates'); return doc||{}; }
+}
+
+async function apiSaveTemplates(tpl) {
+  if (BACKEND==='sheets') { await sheetsAPI({action:'saveTemplates',templates:tpl}); }
+  else { await fbSet('config','templates',tpl); }
+}
+
+async function apiSubmitReport(report) {
+  if (BACKEND==='sheets') {
+    const r = await sheetsAPI({action:'submitReport',...report});
+    if (r.error) throw new Error(r.error);
+  } else {
+    const docId = report.bcId + '_' + report.date;
+    await fbSet('reports', docId, {...report, submittedAt:new Date().toISOString()});
+  }
+}
+
+async function apiGetReports(filters={}) {
+  if (BACKEND==='sheets') {
+    const r = await sheetsAPI({action:'getReports',...filters});
+    return r.reports||[];
+  } else {
+    let reports = await fbGet('reports');
+    reports = (reports||[]).filter(r=>r&&r.bcId);
+    if (filters.date) reports = reports.filter(r=>String(r.date)===String(filters.date));
+    if (filters.bcId) reports = reports.filter(r=>r.bcId===filters.bcId);
+    if (filters.district) reports = reports.filter(r=>r.bcDistrict===filters.district);
+    return reports;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  LOGIN / LOGOUT
+// ═══════════════════════════════════════════
+let selRoleVal = 'BC';
+function selRole(r) {
+  selRoleVal = r;
+  ['BC','DC','ADMIN'].forEach(x => document.getElementById('rtab_'+x).classList.remove('active'));
+  document.getElementById('rtab_'+r).classList.add('active');
+}
+
+async function doLogin() {
+  const id = document.getElementById('loginId').value.trim().toUpperCase();
+  const pass = document.getElementById('loginPass').value;
+  if (!id||!pass) { showToast('❌ Enter User ID and Password'); return; }
+  showLoading('Logging in...');
+  try {
+    const user = await apiLogin(id, pass);
+    CU = user;
+    document.getElementById('headerUser').textContent = user.name;
+    document.getElementById('headerSub').textContent = user.role==='ADMIN' ? 'Admin — All India View' : user.role==='DC' ? `DC — ${user.district}` : `BC — ${user.district}`;
+    hideLoading();
+    if (user.role==='ADMIN') await initAdmin();
+    else if (user.role==='DC') await initDC();
+    else await initBC();
+    showToast('✅ Welcome, ' + user.name + '!');
+  } catch(e) {
+    hideLoading(); showToast('❌ ' + e.message);
+  }
+}
+
+function doLogout() {
+  CU=null; CACHE={users:[],reports:[],params:CACHE.params,templates:CACHE.templates};
+  ['bcPage','dcPage','adminPage'].forEach(p=>document.getElementById(p).classList.remove('active'));
+  showPage('loginPage');
+}
+
+// ═══════════════════════════════════════════
+//  BC FLOW
+// ═══════════════════════════════════════════
+async function initBC() {
+  showPage('bcPage');
+  document.getElementById('bcWelcome').textContent = 'Welcome, ' + CU.name;
+  document.getElementById('bcDate').textContent = fmtDate(today()) + ' — ' + (CU.district||'');
+  showLoading('Loading your data...');
+  try {
+    const reports = await apiGetReports({ bcId:CU.id });
+    CACHE.reports = reports;
+    hideLoading();
+    renderBCForm(); renderBCHistory(); calcStreak();
+  } catch(e) { hideLoading(); showToast('⚠ Could not load history: ' + e.message); renderBCForm(); }
+}
+
+function renderBCForm() {
+  const params = CACHE.params;
+  const tr = CACHE.reports.find(r=>String(r.date)===today());
+  document.getElementById('bcSubmittedOk').style.display = tr?'block':'none';
+  document.getElementById('entryGrid').innerHTML = params.map(p=>`
+    <div class="entry-item">
+      <div class="eicon">${p.icon}</div>
+      <label>${p.label}</label>
+      <input type="number" id="param_${p.id}" min="0" value="${tr?(tr.data&&tr.data[p.id]||0):0}" />
+      <div class="text-muted" style="text-align:center;margin-top:3px;">enter count</div>
+    </div>`).join('');
+  if (tr) document.getElementById('bcRemarks').value = tr.remarks||'';
+}
+
+async function submitBCReport() {
+  if (!navigator.onLine) { showToast('❌ No internet connection'); return; }
+  const params = CACHE.params;
+  const data = {};
+  params.forEach(p=>{ data[p.id]=parseInt(document.getElementById('param_'+p.id).value)||0; });
+  const remarks = document.getElementById('bcRemarks').value;
+  showLoading('Submitting...');
+  try {
+    await apiSubmitReport({ bcId:CU.id, bcName:CU.name, bcDistrict:CU.district, date:today(), data, remarks });
+    const existing = CACHE.reports.findIndex(r=>String(r.date)===today()&&r.bcId===CU.id);
+    const rep = { bcId:CU.id, bcName:CU.name, bcDistrict:CU.district, date:today(), data, remarks, submittedAt:new Date().toISOString() };
+    if (existing>=0) CACHE.reports[existing]=rep; else CACHE.reports.push(rep);
+    hideLoading();
+    document.getElementById('bcSubmittedOk').style.display='block';
+    renderBCHistory(); calcStreak();
+    showToast('✅ Report submitted successfully!');
+  } catch(e) { hideLoading(); showToast('❌ Submit failed: ' + e.message); }
+}
+
+function renderBCHistory() {
+  const reports = CACHE.reports.filter(r=>r.bcId===CU.id).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const params = CACHE.params;
+  if (!reports.length) { document.getElementById('bcHistory').innerHTML='<p class="text-muted">No submissions yet.</p>'; return; }
+  document.getElementById('bcHistory').innerHTML = reports.map(r=>`
+    <div class="history-row">
+      <div class="history-date">${fmtDate(String(r.date))}</div>
+      <div><div class="history-chips">${params.map(p=>`<span class="chip">${p.icon} ${p.label.split(' ')[0]}: <b>${r.data&&r.data[p.id]!==undefined?r.data[p.id]:0}</b></span>`).join('')}</div>
+      ${r.remarks?`<div class="text-muted mt-8">💬 ${r.remarks}</div>`:''}</div>
+    </div>`).join('');
+}
+
+function calcStreak() {
+  const dates = new Set(CACHE.reports.filter(r=>r.bcId===CU.id).map(r=>String(r.date)));
+  let streak=0, d=new Date();
+  while(dates.has(d.toISOString().split('T')[0])){streak++;d.setDate(d.getDate()-1);}
+  document.getElementById('bcStreak').textContent = streak+'🔥';
+}
+
+// ═══════════════════════════════════════════
+//  DC FLOW
+// ═══════════════════════════════════════════
+async function initDC() {
+  showPage('dcPage');
+  document.getElementById('dcWelcome').textContent = 'Welcome, ' + CU.name;
+  document.getElementById('dcInfo').textContent = `District: ${CU.district} · ${fmtDate(today())}`;
+  document.getElementById('dcFilterDate').value = today();
+  showLoading('Loading district data...');
+  try {
+    const [users, reports] = await Promise.all([apiGetUsers('BC'), apiGetReports({district:CU.district})]);
+    CACHE.users = users; CACHE.reports = reports;
+    const myBCs = users.filter(u=>u.district===CU.district);
+    document.getElementById('dcBCCount').textContent = myBCs.length;
+    hideLoading();
+    renderDCStats(); renderDCOverview(); renderDCAlerts();
+  } catch(e) { hideLoading(); showToast('❌ ' + e.message); }
+}
+
+function renderDCStats() {
+  const myBCs = CACHE.users.filter(u=>u.role==='BC'&&u.district===CU.district);
+  const todayReps = CACHE.reports.filter(r=>String(r.date)===today()&&r.bcDistrict===CU.district);
+  const sub=todayReps.length, pend=myBCs.length-sub;
+  const acc=todayReps.reduce((s,r)=>s+(r.data&&r.data['accounts']||0),0);
+  document.getElementById('dcStats').innerHTML=`
+    <div class="stat-card purple"><div class="lbl">My BCs</div><div class="val">${myBCs.length}</div><div class="sub2">${CU.district}</div></div>
+    <div class="stat-card green"><div class="lbl">Submitted Today</div><div class="val">${sub}</div><div class="prog-bar-wrap"><div class="prog-bar" style="width:${myBCs.length?Math.round(sub/myBCs.length*100):0}%;background:var(--green);"></div></div></div>
+    <div class="stat-card red"><div class="lbl">Pending Today</div><div class="val">${pend}</div><div class="sub2">Need reminder</div></div>
+    <div class="stat-card amber"><div class="lbl">Accounts Today</div><div class="val">${acc}</div></div>
+    <div class="stat-card"><div class="lbl">Submission Rate</div><div class="val">${myBCs.length?Math.round(sub/myBCs.length*100):0}%</div><div class="prog-bar-wrap"><div class="prog-bar" style="width:${myBCs.length?Math.round(sub/myBCs.length*100):0}%;"></div></div></div>`;
+}
+
+async function renderDCOverview() {
+  const date = document.getElementById('dcFilterDate').value||today();
+  const myBCs = CACHE.users.filter(u=>u.role==='BC'&&u.district===CU.district);
+  const params = CACHE.params;
+  let reports = CACHE.reports;
+  if (date !== today()) {
+    showLoading('Loading...');
+    try { reports = await apiGetReports({date,district:CU.district}); } catch(e){}
+    hideLoading();
+  }
+  document.getElementById('dcTHead').innerHTML=`<tr><th>#</th><th>BC ID</th><th>Name</th><th>Location</th>${params.map(p=>`<th>${p.icon} ${p.label}</th>`).join('')}<th>Status</th><th>Time</th></tr>`;
+  document.getElementById('dcTBody').innerHTML=myBCs.map((bc,i)=>{
+    const rep=reports.find(r=>r.bcId===bc.id&&String(r.date)===date);
+    const time=rep?new Date(rep.submittedAt).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'—';
+    return `<tr><td>${i+1}</td><td><b>${bc.id}</b></td><td>${bc.name}</td><td>${bc.location||'—'}</td>
+      ${params.map(p=>`<td style="text-align:center;"><b>${rep&&rep.data?(rep.data[p.id]||0):'—'}</b></td>`).join('')}
+      <td>${rep?'<span class="badge badge-green">✅ Done</span>':'<span class="badge badge-red">⏳ Pending</span>'}</td><td>${time}</td></tr>`;
+  }).join('');
+}
+
+function renderDCAlerts() {
+  const myBCs = CACHE.users.filter(u=>u.role==='BC'&&u.district===CU.district);
+  const submitted = new Set(CACHE.reports.filter(r=>String(r.date)===today()).map(r=>r.bcId));
+  const pending = myBCs.filter(bc=>!submitted.has(bc.id));
+  const tpl = CACHE.templates;
+  if (!pending.length) { document.getElementById('dcAlertsList').innerHTML='<div class="submitted-ok">🎉 All your BCs submitted today!</div>'; return; }
+  document.getElementById('dcAlertsList').innerHTML=pending.map(bc=>{
+    const waMsg=(tpl.wa||'Dear {name}, report pending for {date}').replace(/{name}/g,bc.name).replace(/{id}/g,bc.id).replace(/{date}/g,fmtDate(today()));
+    const emMsg=(tpl.email||'').replace(/{name}/g,bc.name).replace(/{id}/g,bc.id).replace(/{date}/g,fmtDate(today()));
+    return `<div class="alert-item">
+      <div><div class="bc-name">⚠ ${bc.name}</div><div class="bc-id">${bc.id} · ${bc.location||''} · 📱 ${bc.mobile||'N/A'}</div></div>
+      <div class="alert-actions">
+        ${bc.mobile?`<a href="https://wa.me/91${bc.mobile}?text=${encodeURIComponent(waMsg)}" target="_blank" class="btn btn-sm btn-green">📱 WA</a>`:''}
+        ${bc.email?`<a href="mailto:${bc.email}?subject=Report Pending&body=${encodeURIComponent(emMsg)}" class="btn btn-sm btn-outline">✉ Email</a>`:''}
+      </div></div>`;
+  }).join('');
+}
+
+function switchDCTab(tab) {
+  ['overview','alerts'].forEach(t=>document.getElementById('dctab-'+t).style.display=t===tab?'block':'none');
+  document.querySelectorAll('#dcPage .tab-btn').forEach((b,i)=>b.classList.toggle('active',['overview','alerts'][i]===tab));
+  if(tab==='alerts') renderDCAlerts();
+}
+
+function dcSetToday(){document.getElementById('dcFilterDate').value=today();renderDCOverview();}
+function dcSetYesterday(){const d=new Date();d.setDate(d.getDate()-1);document.getElementById('dcFilterDate').value=d.toISOString().split('T')[0];renderDCOverview();}
+
+function exportDCCSV(){
+  const date=document.getElementById('dcFilterDate').value||today();
+  const myBCs=CACHE.users.filter(u=>u.role==='BC'&&u.district===CU.district);
+  const params=CACHE.params;
+  const headers=['BC ID','Name','Location',...params.map(p=>p.label),'Remarks','Status'];
+  const rows=myBCs.map(bc=>{
+    const rep=CACHE.reports.find(r=>r.bcId===bc.id&&String(r.date)===date);
+    return [bc.id,bc.name,bc.location||'',...params.map(p=>rep&&rep.data?(rep.data[p.id]||0):''),rep?(rep.remarks||''):'',rep?'Submitted':'Pending'].map(v=>`"${v}"`).join(',');
+  });
+  dlCSV([headers.join(','),...rows].join('\n'), `${CU.district}_${date}.csv`);
+}
+
+// ═══════════════════════════════════════════
+//  ADMIN FLOW
+// ═══════════════════════════════════════════
+async function initAdmin() {
+  showPage('adminPage');
+  document.getElementById('filterDate').value = today();
+  showLoading('Loading all data...');
+  try {
+    const [users, reports] = await Promise.all([apiGetUsers(), apiGetReports()]);
+    CACHE.users=users; CACHE.reports=reports;
+    hideLoading();
+    populateDistrictDropdowns();
+    renderAdminStats(); renderAdminOverview(); renderAlerts(); renderBCList(); renderParams(); loadTemplates();
+  } catch(e) { hideLoading(); showToast('❌ ' + e.message); }
+}
+
+async function refreshAll() {
+  showLoading('Refreshing...');
+  try {
+    const date=document.getElementById('filterDate').value||today();
+    const [users,reports]=await Promise.all([apiGetUsers(),apiGetReports()]);
+    CACHE.users=users; CACHE.reports=reports;
+    hideLoading(); renderAdminStats(); renderAdminOverview(); renderAlerts(); renderBCList();
+    showToast('✅ Data refreshed');
+  } catch(e){hideLoading();showToast('❌ '+e.message);}
+}
+
+function renderAdminStats() {
+  const bcs=CACHE.users.filter(u=>u.role==='BC');
+  const dcs=CACHE.users.filter(u=>u.role==='DC');
+  const todayReps=CACHE.reports.filter(r=>String(r.date)===today());
+  const sub=todayReps.length, pend=bcs.length-sub;
+  const acc=todayReps.reduce((s,r)=>s+(r.data&&r.data['accounts']||0),0);
+  document.getElementById('adminStats').innerHTML=`
+    <div class="stat-card"><div class="lbl">Total BCs</div><div class="val">${bcs.length}</div><div class="sub2">${dcs.length} Districts</div></div>
+    <div class="stat-card green"><div class="lbl">Submitted Today</div><div class="val">${sub}</div><div class="prog-bar-wrap"><div class="prog-bar" style="width:${bcs.length?Math.round(sub/bcs.length*100):0}%;background:var(--green);"></div></div></div>
+    <div class="stat-card red"><div class="lbl">Pending Today</div><div class="val">${pend}</div></div>
+    <div class="stat-card amber"><div class="lbl">Accounts Today</div><div class="val">${acc}</div></div>
+    <div class="stat-card"><div class="lbl">Rate</div><div class="val">${bcs.length?Math.round(sub/bcs.length*100):0}%</div></div>`;
+}
+
+function renderAdminOverview() {
+  const date=document.getElementById('filterDate').value||today();
+  const distF=document.getElementById('filterDistrict').value;
+  let bcs=CACHE.users.filter(u=>u.role==='BC');
+  if(distF) bcs=bcs.filter(b=>b.district===distF);
+  const dcs=CACHE.users.filter(u=>u.role==='DC');
+  const params=CACHE.params;
+  document.getElementById('adminTHead').innerHTML=`<tr><th>#</th><th>BC ID</th><th>Name</th><th>District</th><th>DC</th>${params.map(p=>`<th>${p.icon}</th>`).join('')}<th>Status</th></tr>`;
+  document.getElementById('adminTBody').innerHTML=bcs.map((bc,i)=>{
+    const rep=CACHE.reports.find(r=>r.bcId===bc.id&&String(r.date)===date);
+    const dc=dcs.find(d=>d.district===bc.district);
+    return `<tr><td>${i+1}</td><td><b>${bc.id}</b></td><td>${bc.name}</td><td><span class="district-pill">🗺 ${bc.district||'—'}</span></td><td>${dc?dc.name:'—'}</td>
+      ${params.map(p=>`<td style="text-align:center;"><b>${rep&&rep.data?(rep.data[p.id]||0):'—'}</b></td>`).join('')}
+      <td>${rep?'<span class="badge badge-green">✅</span>':'<span class="badge badge-red">⏳</span>'}</td></tr>`;
+  }).join('')||`<tr><td colspan="${params.length+7}" style="text-align:center;color:var(--gray-400);padding:20px;">No data</td></tr>`;
+  renderAdminStats();
+}
+
+function renderAlerts() {
+  const distF=document.getElementById('alertFilterDistrict').value;
+  let bcs=CACHE.users.filter(u=>u.role==='BC');
+  if(distF) bcs=bcs.filter(b=>b.district===distF);
+  const submitted=new Set(CACHE.reports.filter(r=>String(r.date)===today()).map(r=>r.bcId));
+  const pending=bcs.filter(bc=>!submitted.has(bc.id));
+  const dcs=CACHE.users.filter(u=>u.role==='DC');
+  const tpl=CACHE.templates;
+  if(!pending.length){document.getElementById('alertsList').innerHTML='<div class="submitted-ok">🎉 All BCs submitted today!</div>';return;}
+  document.getElementById('alertsList').innerHTML=pending.map(bc=>{
+    const dc=dcs.find(d=>d.district===bc.district);
+    const waMsg=(tpl.wa||'Dear {name}, report pending for {date}').replace(/{name}/g,bc.name).replace(/{id}/g,bc.id).replace(/{date}/g,fmtDate(today()));
+    const emMsg=(tpl.email||'').replace(/{name}/g,bc.name).replace(/{id}/g,bc.id).replace(/{date}/g,fmtDate(today()));
+    const dcMsg=`Dear ${dc?dc.name:'DC'}, BC ${bc.name} (${bc.id}) has not submitted report for ${fmtDate(today())}. Please follow up.`;
+    return `<div class="alert-item">
+      <div><div class="bc-name">⚠ ${bc.name}</div><div class="bc-id">${bc.id} · <span class="district-pill">🗺 ${bc.district||'—'}</span> · DC: ${dc?dc.name:'—'}</div></div>
+      <div class="alert-actions">
+        ${bc.mobile?`<a href="https://wa.me/91${bc.mobile}?text=${encodeURIComponent(waMsg)}" target="_blank" class="btn btn-sm btn-green">📱 WA</a>`:''}
+        ${bc.email?`<a href="mailto:${bc.email}?subject=Report Pending&body=${encodeURIComponent(emMsg)}" class="btn btn-sm btn-outline">✉ Mail</a>`:''}
+        ${dc&&dc.mobile?`<a href="https://wa.me/91${dc.mobile}?text=${encodeURIComponent(dcMsg)}" target="_blank" class="btn btn-sm btn-purple">📱 DC</a>`:''}
+      </div></div>`;
+  }).join('');
+}
+
+function renderBCList() {
+  const distF=document.getElementById('bcFilterDistrict').value;
+  let bcs=CACHE.users.filter(u=>u.role==='BC');
+  if(distF) bcs=bcs.filter(b=>b.district===distF);
+  const submitted=new Set(CACHE.reports.filter(r=>String(r.date)===today()).map(r=>r.bcId));
+  document.getElementById('bcCountLabel').textContent=CACHE.users.filter(u=>u.role==='BC').length;
+  document.getElementById('bcListBody').innerHTML=bcs.map(bc=>`
+    <tr><td><b>${bc.id}</b></td><td>${bc.name}</td><td><span class="district-pill">🗺 ${bc.district||'—'}</span></td>
+    <td>${bc.location||'—'}</td><td>${bc.mobile||'—'}</td>
+    <td>${submitted.has(bc.id)?'<span class="badge badge-green">✅</span>':'<span class="badge badge-red">⏳</span>'}</td></tr>`).join('');
+}
+
+function toggleAddBC(){
+  const f=document.getElementById('addBCForm');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block'){
+    const sel=document.getElementById('newBCDistrict');
+    const dists=[...new Set(CACHE.users.filter(u=>u.role==='DC').map(u=>u.district))];
+    sel.innerHTML='<option value="">-- Select --</option>'+dists.map(d=>`<option>${d}</option>`).join('');
+  }
+}
+
+async function addBC() {
+  const id=document.getElementById('newBCId').value.trim().toUpperCase();
+  const name=document.getElementById('newBCName').value.trim();
+  const district=document.getElementById('newBCDistrict').value;
+  const location=document.getElementById('newBCLocation').value.trim();
+  const mobile=document.getElementById('newBCMobile').value.trim();
+  const email=document.getElementById('newBCEmail').value.trim();
+  const pass=document.getElementById('newBCPass').value.trim();
+  if(!id||!name){showToast('❌ ID and Name required');return;}
+  showLoading('Adding BC...');
+  try {
+    await apiAddUser({id,name,role:'BC',pass:pass||'pass123',mobile,email,district,location});
+    const users=await apiGetUsers(); CACHE.users=users;
+    hideLoading(); toggleAddBC(); renderBCList(); renderAdminStats();
+    showToast(`✅ BC ${name} added`);
+  } catch(e){hideLoading();showToast('❌ '+e.message);}
+}
+
+function populateDistrictDropdowns() {
+  const dists=[...new Set(CACHE.users.filter(u=>u.role==='DC').map(u=>u.district))];
+  ['filterDistrict','alertFilterDistrict','bcFilterDistrict'].forEach(id=>{
+    const el=document.getElementById(id); if(!el)return;
+    el.innerHTML='<option value="">All Districts</option>'+dists.map(d=>`<option>${d}</option>`).join('');
+  });
+}
+
+function switchAdminTab(tab) {
+  ['overview','alerts','bclist','settings'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
+  document.querySelectorAll('#adminPage .tab-btn').forEach((b,i)=>b.classList.toggle('active',['overview','alerts','bclist','settings'][i]===tab));
+  if(tab==='alerts') renderAlerts();
+  if(tab==='bclist') renderBCList();
+  if(tab==='settings'){renderParams();loadTemplates();}
+}
+
+function setFilterToday(){document.getElementById('filterDate').value=today();renderAdminOverview();}
+function setFilterYesterday(){const d=new Date();d.setDate(d.getDate()-1);document.getElementById('filterDate').value=d.toISOString().split('T')[0];renderAdminOverview();}
+
+function exportCSV(){
+  const date=document.getElementById('filterDate').value||today();
+  const bcs=CACHE.users.filter(u=>u.role==='BC');
+  const params=CACHE.params;
+  const dcs=CACHE.users.filter(u=>u.role==='DC');
+  const headers=['BC ID','Name','District','DC','Location',...params.map(p=>p.label),'Remarks','Status'];
+  const rows=bcs.map(bc=>{
+    const rep=CACHE.reports.find(r=>r.bcId===bc.id&&String(r.date)===date);
+    const dc=dcs.find(d=>d.district===bc.district);
+    return [bc.id,bc.name,bc.district||'',dc?dc.name:'',bc.location||'',...params.map(p=>rep&&rep.data?(rep.data[p.id]||0):''),rep?(rep.remarks||''):'',rep?'Submitted':'Pending'].map(v=>`"${v}"`).join(',');
+  });
+  dlCSV([headers.join(','),...rows].join('\n'),`BC_Progress_${date}.csv`);
+}
+
+// ═══════════════════════════════════════════
+//  PARAMS & TEMPLATES
+// ═══════════════════════════════════════════
+function renderParams() {
+  const params=CACHE.params;
+  document.getElementById('paramsList').innerHTML=params.map((p,i)=>`
+    <div class="scheme-param">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">${p.icon}</span><div><div style="font-weight:600;">${p.label}</div><div class="text-muted">ID: ${p.id}</div></div></div>
+      <button class="btn btn-sm btn-red" onclick="removeParam(${i})">✕</button>
+    </div>`).join('');
+}
+
+async function addParam() {
+  const name=document.getElementById('newParamName').value.trim();
+  const icon=document.getElementById('newParamIcon').value.trim()||'📌';
+  if(!name){showToast('❌ Name required');return;}
+  const id=name.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+  if(CACHE.params.find(p=>p.id===id)){showToast('❌ Already exists');return;}
+  CACHE.params.push({id,label:name,icon});
+  try { await apiSaveParams(CACHE.params); renderParams(); showToast(`✅ "${name}" added`); }
+  catch(e){showToast('❌ '+e.message);}
+  document.getElementById('newParamName').value=''; document.getElementById('newParamIcon').value='';
+}
+
+async function removeParam(i) {
+  if(CACHE.params.length<=1){showToast('❌ Min 1 parameter required');return;}
+  const removed=CACHE.params.splice(i,1)[0];
+  try { await apiSaveParams(CACHE.params); renderParams(); showToast(`🗑 "${removed.label}" removed`); }
+  catch(e){showToast('❌ '+e.message);}
+}
+
+function loadTemplates(){
+  document.getElementById('waTemplate').value=CACHE.templates.wa||'';
+  document.getElementById('emailTemplate').value=CACHE.templates.email||'';
+}
+async function saveTemplates(){
+  const tpl={wa:document.getElementById('waTemplate').value,email:document.getElementById('emailTemplate').value};
+  try { await apiSaveTemplates(tpl); CACHE.templates=tpl; showToast('✅ Templates saved'); }
+  catch(e){showToast('❌ '+e.message);}
+}
+
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+function showPage(id) {
+  ['setupPage','loginPage','bcPage','dcPage','adminPage'].forEach(p=>{
+    const el=document.getElementById(p);
+    if(el) el.classList.toggle('active',p===id);
+  });
+}
+function showLoading(msg='Loading...'){
+  document.getElementById('loadingMsg').textContent=msg;
+  document.getElementById('loadingOverlay').style.display='flex';
+}
+function hideLoading(){document.getElementById('loadingOverlay').style.display='none';}
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+function dlCSV(csv,name){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=name;a.click();
+}
+
+// On load — try to restore config
+window.addEventListener('load', () => {
+  const saved=get('bc_backend_config');
+  if(saved){BACKEND=saved.type;SHEETS_URL=saved.sheetsUrl||'';FB_CONFIG=saved.fbConfig||{};}
+  window.addEventListener('online',()=>document.querySelectorAll('.offline-warn').forEach(el=>el.style.display='none'));
+  window.addEventListener('offline',()=>document.querySelectorAll('.offline-warn').forEach(el=>el.style.display='block'));
+});
+</script>
+</body>
+</html>

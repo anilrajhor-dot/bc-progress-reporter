@@ -326,6 +326,8 @@ tr:hover td{background:var(--sky);}
     <button class="tab-btn" onclick="switchAdminTab('alerts')">🔔 Alerts</button>
     <button class="tab-btn" onclick="switchAdminTab('dclist')">🗺️ DCs</button>
     <button class="tab-btn" onclick="switchAdminTab('bclist')">👥 BCs</button>
+    <button class="tab-btn" onclick="switchAdminTab('targets')">🎯 Targets</button>
+    <button class="tab-btn" onclick="switchAdminTab('tasks')">📋 Tasks</button>
     <button class="tab-btn" onclick="switchAdminTab('settings')">⚙ Settings</button>
   </div>
 
@@ -406,6 +408,172 @@ tr:hover td{background:var(--sky);}
       <div class="table-wrap">
         <table><thead><tr><th>BC ID</th><th>Name</th><th>District</th><th>Location</th><th>Mobile</th><th>Today</th></tr></thead>
         <tbody id="bcListBody"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TARGETS TAB -->
+  <div id="tab-targets" style="display:none;">
+    <div class="card">
+      <div class="flex-between" style="margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0;">🎯 Target Allocation</div>
+        <button class="btn btn-sm btn-green" onclick="toggleAddTarget()">＋ Add Target</button>
+      </div>
+      <!-- Add Target Form -->
+      <div id="addTargetForm" style="display:none;background:#f0fdf4;border-radius:var(--radius);padding:14px;margin-bottom:14px;border:1px solid #bbf7d0;">
+        <div class="form-grid">
+          <div class="form-group"><label>Assign To</label>
+            <select id="tgtAssignType" onchange="updateTargetAssignee()">
+              <option value="BC">Specific BC</option>
+              <option value="DC">Specific DC</option>
+              <option value="ALL_BC">All BCs</option>
+              <option value="DISTRICT">All BCs in District</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Select BC/DC</label>
+            <select id="tgtAssignee"><option value="">-- Select --</option></select>
+          </div>
+          <div class="form-group"><label>Target Name</label>
+            <input type="text" id="tgtName" placeholder="e.g. Accounts Opened" />
+          </div>
+          <div class="form-group"><label>Target Value</label>
+            <input type="number" id="tgtValue" placeholder="e.g. 50" min="1" />
+          </div>
+          <div class="form-group"><label>Period</label>
+            <select id="tgtPeriod">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly" selected>Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Month/Period</label>
+            <input type="month" id="tgtMonth" />
+          </div>
+          <div class="form-group"><label>Category</label>
+            <select id="tgtCategory">
+              <option value="financial">💰 Financial Inclusion</option>
+              <option value="insurance">🛡️ Insurance</option>
+              <option value="pension">🏛️ Pension</option>
+              <option value="kyc">🪪 KYC/Documentation</option>
+              <option value="field">🏕️ Field Activity</option>
+              <option value="other">📌 Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Remarks</label>
+            <input type="text" id="tgtRemarks" placeholder="Optional note..." />
+          </div>
+        </div>
+        <div class="flex-row">
+          <button class="btn btn-green btn-sm" onclick="saveTarget()">💾 Save Target</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleAddTarget()">Cancel</button>
+        </div>
+      </div>
+      <!-- Filter -->
+      <div class="filter-bar" style="margin-bottom:10px;">
+        <label>Filter:</label>
+        <select id="tgtFilterBC" onchange="renderTargetList()"><option value="">All BCs/DCs</option></select>
+        <select id="tgtFilterPeriod" onchange="renderTargetList()">
+          <option value="">All Periods</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+          <option value="yearly">Yearly</option>
+        </select>
+        <button class="btn btn-sm btn-outline" onclick="renderTargetList()">🔄 Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Assigned To</th><th>Role</th><th>District</th><th>Target</th><th>Category</th><th>Value</th><th>Period</th><th>Month</th><th>Remarks</th><th>By</th><th>Action</th></tr></thead>
+          <tbody id="targetListBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- BC VIEW of their own targets -->
+    <div class="card" id="myTargetsCard" style="display:none;">
+      <div class="card-title">🎯 My Targets</div>
+      <div id="myTargetsList"></div>
+    </div>
+  </div>
+
+  <!-- TASKS TAB -->
+  <div id="tab-tasks" style="display:none;">
+    <div class="card">
+      <div class="flex-between" style="margin-bottom:14px;">
+        <div class="card-title" style="margin-bottom:0;">📋 Task Allocation</div>
+        <button class="btn btn-sm btn-blue" onclick="toggleAddTask()" style="background:var(--blue);color:#fff;padding:6px 13px;border-radius:var(--radius);font-size:12px;font-weight:700;cursor:pointer;border:none;">＋ Add Task</button>
+      </div>
+      <!-- Add Task Form -->
+      <div id="addTaskForm" style="display:none;background:#eff6ff;border-radius:var(--radius);padding:14px;margin-bottom:14px;border:1px solid #bfdbfe;">
+        <div class="form-grid">
+          <div class="form-group"><label>Assign To</label>
+            <select id="taskAssignType" onchange="updateTaskAssignee()">
+              <option value="BC">Specific BC</option>
+              <option value="DC">Specific DC</option>
+              <option value="ALL_BC">All BCs</option>
+              <option value="DISTRICT">All BCs in District</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Select BC/DC</label>
+            <select id="taskAssignee"><option value="">-- Select --</option></select>
+          </div>
+          <div class="form-group"><label>Task Title</label>
+            <input type="text" id="taskTitle" placeholder="e.g. Conduct Financial Literacy Camp" />
+          </div>
+          <div class="form-group"><label>Task Type</label>
+            <select id="taskType">
+              <option value="camp">🏕️ Camp/Mela</option>
+              <option value="visit">🚶 Field Visit</option>
+              <option value="meeting">👥 Meeting</option>
+              <option value="collection">📁 Document Collection</option>
+              <option value="report">📊 Report Submission</option>
+              <option value="training">🎓 Training</option>
+              <option value="other">📌 Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Due Date</label>
+            <input type="date" id="taskDueDate" />
+          </div>
+          <div class="form-group"><label>Priority</label>
+            <select id="taskPriority">
+              <option value="normal">🟡 Normal</option>
+              <option value="high">🔴 High</option>
+              <option value="low">🟢 Low</option>
+            </select>
+          </div>
+          <div class="form-group" style="grid-column:span 2;"><label>Task Description</label>
+            <input type="text" id="taskDesc" placeholder="Detailed instructions for the BC..." />
+          </div>
+        </div>
+        <div class="flex-row">
+          <button class="btn btn-sm" style="background:var(--blue);color:#fff;" onclick="saveTask()">💾 Save Task</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleAddTask()">Cancel</button>
+        </div>
+      </div>
+      <!-- Filter -->
+      <div class="filter-bar" style="margin-bottom:10px;">
+        <label>Filter:</label>
+        <select id="taskFilterBC" onchange="renderTaskList()"><option value="">All BCs/DCs</option></select>
+        <select id="taskFilterStatus" onchange="renderTaskList()">
+          <option value="">All Status</option>
+          <option value="pending">⏳ Pending</option>
+          <option value="done">✅ Completed</option>
+        </select>
+        <select id="taskFilterPriority" onchange="renderTaskList()">
+          <option value="">All Priority</option>
+          <option value="high">🔴 High</option>
+          <option value="normal">🟡 Normal</option>
+          <option value="low">🟢 Low</option>
+        </select>
+        <button class="btn btn-sm btn-outline" onclick="renderTaskList()">🔄 Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Assigned To</th><th>Role</th><th>District</th><th>Task</th><th>Type</th><th>Due Date</th><th>Priority</th><th>Status</th><th>Description</th><th>By</th><th>Action</th></tr></thead>
+          <tbody id="taskListBody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -776,7 +944,7 @@ async function submitBCReport() {
     if (existing>=0) CACHE.reports[existing]=rep; else CACHE.reports.push(rep);
     hideLoading();
     document.getElementById('bcSubmittedOk').style.display='block';
-    renderBCHistory(); calcStreak();
+    renderBCHistory(); calcStreak(); renderBCTargetsAndTasks();
     showToast('✅ Report submitted successfully!');
   } catch(e) { hideLoading(); showToast('❌ Submit failed: ' + e.message); }
 }
@@ -815,7 +983,7 @@ async function initDC() {
     const myBCs = users.filter(u=>u.district===CU.district);
     document.getElementById('dcBCCount').textContent = myBCs.length;
     hideLoading();
-    renderDCStats(); renderDCOverview(); renderDCAlerts();
+    renderDCStats(); renderDCOverview(); renderDCAlerts(); renderDCTargetsAndTasks();
   } catch(e) { hideLoading(); showToast('❌ ' + e.message); }
 }
 
@@ -1022,6 +1190,348 @@ function populateDistrictDropdowns() {
   });
 }
 
+// ═══════════════════════════════════
+//  TARGETS & TASKS — localStorage
+// ═══════════════════════════════════
+const KEY_TARGETS = 'bc_targets';
+const KEY_TASKS = 'bc_tasks';
+const getLocal = k => { try{return JSON.parse(localStorage.getItem(k))||[];}catch{return[];} };
+const setLocal = (k,v) => localStorage.setItem(k,JSON.stringify(v));
+
+// ── TARGET FUNCTIONS ──
+function toggleAddTarget(){
+  const f=document.getElementById('addTargetForm');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block'){
+    // Set default month to current
+    const now=new Date();
+    document.getElementById('tgtMonth').value=now.toISOString().slice(0,7);
+    updateTargetAssignee();
+  }
+}
+
+function updateTargetAssignee(){
+  const type=document.getElementById('tgtAssignType').value;
+  const sel=document.getElementById('tgtAssignee');
+  sel.innerHTML='<option value="">-- Select --</option>';
+  if(type==='BC'){
+    CACHE.users.filter(u=>u.role==='BC').forEach(u=>{
+      sel.innerHTML+=`<option value="${u.id}">${u.id} — ${u.name} (${u.district})</option>`;
+    });
+  } else if(type==='DC'){
+    CACHE.users.filter(u=>u.role==='DC').forEach(u=>{
+      sel.innerHTML+=`<option value="${u.id}">${u.id} — ${u.name} (${u.district})</option>`;
+    });
+  } else if(type==='DISTRICT'){
+    const dists=[...new Set(CACHE.users.filter(u=>u.role==='DC').map(u=>u.district))];
+    dists.forEach(d=>{ sel.innerHTML+=`<option value="${d}">${d} District</option>`; });
+  } else {
+    sel.innerHTML='<option value="ALL">All BCs</option>';
+  }
+}
+
+function saveTarget(){
+  const type=document.getElementById('tgtAssignType').value;
+  const assignee=document.getElementById('tgtAssignee').value;
+  const name=document.getElementById('tgtName').value.trim();
+  const value=parseInt(document.getElementById('tgtValue').value)||0;
+  const period=document.getElementById('tgtPeriod').value;
+  const month=document.getElementById('tgtMonth').value;
+  const category=document.getElementById('tgtCategory').value;
+  const remarks=document.getElementById('tgtRemarks').value.trim();
+  if(!name||!value){showToast('❌ Target name and value required');return;}
+  if((type==='BC'||type==='DC'||type==='DISTRICT')&&!assignee){showToast('❌ Please select assignee');return;}
+  const targets=getLocal(KEY_TARGETS);
+  targets.push({
+    id:'TGT'+Date.now(), assignType:type, assignee, name, value, period, month,
+    category, remarks, createdBy:CU.id, createdAt:new Date().toISOString(), achieved:0
+  });
+  setLocal(KEY_TARGETS,targets);
+  toggleAddTarget();
+  renderTargetList();
+  // Clear form
+  ['tgtName','tgtValue','tgtRemarks'].forEach(id=>document.getElementById(id).value='');
+  showToast('✅ Target saved');
+}
+
+function renderTargetList(){
+  const targets=getLocal(KEY_TARGETS);
+  const filterBC=document.getElementById('tgtFilterBC')?document.getElementById('tgtFilterBC').value:'';
+  const filterPeriod=document.getElementById('tgtFilterPeriod')?document.getElementById('tgtFilterPeriod').value:'';
+  let filtered=targets;
+  if(filterBC) filtered=filtered.filter(t=>t.assignee===filterBC||t.assignType==='ALL_BC');
+  if(filterPeriod) filtered=filtered.filter(t=>t.period===filterPeriod);
+
+  const catIcons={financial:'💰',insurance:'🛡️',pension:'🏛️',kyc:'🪪',field:'🏕️',other:'📌'};
+  document.getElementById('targetListBody').innerHTML=filtered.length?filtered.map((t,i)=>{
+    const pct=t.value?Math.min(100,Math.round((t.achieved||0)/t.value*100)):0;
+    return `<tr>
+      <td>${i+1}</td>
+      <td><b>${t.assignee||'All BCs'}</b></td>
+      <td><span class="badge ${t.assignType==='BC'?'badge-green':t.assignType==='DC'?'badge-purple':'badge-amber'}">${t.assignType}</span></td>
+      <td>${getDistrictForAssignee(t)||'—'}</td>
+      <td><b>${t.name}</b></td>
+      <td>${catIcons[t.category]||'📌'} ${t.category}</td>
+      <td style="text-align:center;"><b>${t.value}</b></td>
+      <td><span class="badge badge-amber">${t.period}</span></td>
+      <td>${t.month||'—'}</td>
+      <td>${t.remarks||'—'}</td>
+      <td>${t.createdBy}</td>
+      <td><button class="btn btn-sm btn-red" onclick="deleteTarget('${t.id}')">🗑</button></td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="12" style="text-align:center;color:var(--gray-400);padding:20px;">No targets yet. Click + Add Target to begin.</td></tr>`;
+
+  // Populate filter dropdown
+  const sel=document.getElementById('tgtFilterBC');
+  if(sel){
+    const ids=[...new Set(targets.map(t=>t.assignee).filter(Boolean))];
+    const current=sel.value;
+    sel.innerHTML='<option value="">All BCs/DCs</option>'+ids.map(id=>`<option ${id===current?'selected':''} value="${id}">${id}</option>`).join('');
+  }
+}
+
+function deleteTarget(id){
+  const targets=getLocal(KEY_TARGETS).filter(t=>t.id!==id);
+  setLocal(KEY_TARGETS,targets);
+  renderTargetList();
+  showToast('🗑 Target deleted');
+}
+
+function getDistrictForAssignee(t){
+  if(t.assignType==='DISTRICT') return t.assignee;
+  if(t.assignType==='ALL_BC') return 'All';
+  const user=CACHE.users.find(u=>u.id===t.assignee);
+  return user?user.district:'—';
+}
+
+// ── TASK FUNCTIONS ──
+function toggleAddTask(){
+  const f=document.getElementById('addTaskForm');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block'){
+    document.getElementById('taskDueDate').value=today();
+    updateTaskAssignee();
+  }
+}
+
+function updateTaskAssignee(){
+  const type=document.getElementById('taskAssignType').value;
+  const sel=document.getElementById('taskAssignee');
+  sel.innerHTML='<option value="">-- Select --</option>';
+  if(type==='BC'){
+    CACHE.users.filter(u=>u.role==='BC').forEach(u=>{
+      sel.innerHTML+=`<option value="${u.id}">${u.id} — ${u.name} (${u.district})</option>`;
+    });
+  } else if(type==='DC'){
+    CACHE.users.filter(u=>u.role==='DC').forEach(u=>{
+      sel.innerHTML+=`<option value="${u.id}">${u.id} — ${u.name} (${u.district})</option>`;
+    });
+  } else if(type==='DISTRICT'){
+    const dists=[...new Set(CACHE.users.filter(u=>u.role==='DC').map(u=>u.district))];
+    dists.forEach(d=>{ sel.innerHTML+=`<option value="${d}">${d} District</option>`; });
+  } else {
+    sel.innerHTML='<option value="ALL">All BCs</option>';
+  }
+}
+
+function saveTask(){
+  const type=document.getElementById('taskAssignType').value;
+  const assignee=document.getElementById('taskAssignee').value;
+  const title=document.getElementById('taskTitle').value.trim();
+  const taskType=document.getElementById('taskType').value;
+  const dueDate=document.getElementById('taskDueDate').value;
+  const priority=document.getElementById('taskPriority').value;
+  const desc=document.getElementById('taskDesc').value.trim();
+  if(!title){showToast('❌ Task title required');return;}
+  if((type==='BC'||type==='DC'||type==='DISTRICT')&&!assignee){showToast('❌ Please select assignee');return;}
+  const tasks=getLocal(KEY_TASKS);
+  tasks.push({
+    id:'TASK'+Date.now(), assignType:type, assignee, title, taskType,
+    dueDate, priority, desc, status:'pending',
+    createdBy:CU.id, createdAt:new Date().toISOString()
+  });
+  setLocal(KEY_TASKS,tasks);
+  toggleAddTask();
+  renderTaskList();
+  ['taskTitle','taskDesc'].forEach(id=>document.getElementById(id).value='');
+  showToast('✅ Task assigned');
+}
+
+function renderTaskList(){
+  const tasks=getLocal(KEY_TASKS);
+  const filterBC=document.getElementById('taskFilterBC')?document.getElementById('taskFilterBC').value:'';
+  const filterStatus=document.getElementById('taskFilterStatus')?document.getElementById('taskFilterStatus').value:'';
+  const filterPri=document.getElementById('taskFilterPriority')?document.getElementById('taskFilterPriority').value:'';
+  let filtered=tasks;
+  if(filterBC) filtered=filtered.filter(t=>t.assignee===filterBC||t.assignType==='ALL_BC');
+  if(filterStatus) filtered=filtered.filter(t=>t.status===filterStatus);
+  if(filterPri) filtered=filtered.filter(t=>t.priority===filterPri);
+
+  const typeIcons={camp:'🏕️',visit:'🚶',meeting:'👥',collection:'📁',report:'📊',training:'🎓',other:'📌'};
+  const priColors={high:'badge-red',normal:'badge-amber',low:'badge-green'};
+  document.getElementById('taskListBody').innerHTML=filtered.length?filtered.map((t,i)=>{
+    const overdue=t.dueDate&&t.dueDate<today()&&t.status==='pending';
+    return `<tr style="${overdue?'background:#fff1f2;':''}">
+      <td>${i+1}</td>
+      <td><b>${t.assignee||'All BCs'}</b></td>
+      <td><span class="badge ${t.assignType==='BC'?'badge-green':t.assignType==='DC'?'badge-purple':'badge-amber'}">${t.assignType}</span></td>
+      <td>${getDistrictForTask(t)||'—'}</td>
+      <td><b>${t.title}</b>${overdue?' <span style="color:var(--red);font-size:10px;">⚠ OVERDUE</span>':''}</td>
+      <td>${typeIcons[t.taskType]||'📌'} ${t.taskType}</td>
+      <td>${t.dueDate?fmtDate(t.dueDate):'—'}</td>
+      <td><span class="badge ${priColors[t.priority]||'badge-amber'}">${t.priority}</span></td>
+      <td>${t.status==='done'?'<span class="badge badge-green">✅ Done</span>':'<span class="badge badge-red">⏳ Pending</span>'}</td>
+      <td>${t.desc||'—'}</td>
+      <td>${t.createdBy}</td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap;">
+        ${t.status==='pending'?`<button class="btn btn-sm btn-green" onclick="markTaskDone('${t.id}')">✅</button>`:''}
+        <button class="btn btn-sm btn-red" onclick="deleteTask('${t.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join(''):`<tr><td colspan="12" style="text-align:center;color:var(--gray-400);padding:20px;">No tasks yet. Click + Add Task to begin.</td></tr>`;
+
+  // Populate filter
+  const sel=document.getElementById('taskFilterBC');
+  if(sel){
+    const ids=[...new Set(tasks.map(t=>t.assignee).filter(Boolean))];
+    const current=sel.value;
+    sel.innerHTML='<option value="">All BCs/DCs</option>'+ids.map(id=>`<option ${id===current?'selected':''} value="${id}">${id}</option>`).join('');
+  }
+}
+
+function getDistrictForTask(t){
+  if(t.assignType==='DISTRICT') return t.assignee;
+  if(t.assignType==='ALL_BC') return 'All';
+  const user=CACHE.users.find(u=>u.id===t.assignee);
+  return user?user.district:'—';
+}
+
+function markTaskDone(id){
+  const tasks=getLocal(KEY_TASKS);
+  const idx=tasks.findIndex(t=>t.id===id);
+  if(idx>=0){tasks[idx].status='done';tasks[idx].completedAt=new Date().toISOString();}
+  setLocal(KEY_TASKS,tasks);
+  renderTaskList();
+  showToast('✅ Task marked as completed');
+}
+
+function deleteTask(id){
+  const tasks=getLocal(KEY_TASKS).filter(t=>t.id!==id);
+  setLocal(KEY_TASKS,tasks);
+  renderTaskList();
+  showToast('🗑 Task deleted');
+}
+
+// ── BC VIEW: My Targets & Tasks ──
+function renderBCTargetsAndTasks(){
+  const targets=getLocal(KEY_TARGETS).filter(t=>
+    t.assignee===CU.id || t.assignType==='ALL_BC' ||
+    (t.assignType==='DISTRICT' && t.assignee===CU.district)
+  );
+  const tasks=getLocal(KEY_TASKS).filter(t=>
+    t.assignee===CU.id || t.assignType==='ALL_BC' ||
+    (t.assignType==='DISTRICT' && t.assignee===CU.district)
+  );
+
+  const catIcons={financial:'💰',insurance:'🛡️',pension:'🏛️',kyc:'🪪',field:'🏕️',other:'📌'};
+  const priColors={high:'badge-red',normal:'badge-amber',low:'badge-green'};
+
+  let html='';
+  if(targets.length){
+    html+=`<div style="margin-bottom:16px;"><div style="font-weight:700;color:var(--navy);margin-bottom:10px;font-size:13px;">🎯 My Targets</div>`;
+    html+=targets.map(t=>`
+      <div style="background:var(--gray-50);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--green);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div><b>${t.name}</b> <span class="badge badge-amber" style="margin-left:6px;">${t.period}</span></div>
+          <div style="font-size:18px;font-weight:800;color:var(--navy);">${t.value}</div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-600);margin-top:3px;">${catIcons[t.category]||'📌'} ${t.category} · ${t.month||''} ${t.remarks?'· '+t.remarks:''}</div>
+      </div>`).join('');
+    html+=`</div>`;
+  }
+
+  if(tasks.length){
+    html+=`<div><div style="font-weight:700;color:var(--navy);margin-bottom:10px;font-size:13px;">📋 My Tasks</div>`;
+    html+=tasks.map(t=>{
+      const overdue=t.dueDate&&t.dueDate<today()&&t.status==='pending';
+      return `<div style="background:var(--gray-50);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid ${t.status==='done'?'var(--green)':overdue?'var(--red)':'var(--blue)'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+          <div><b>${t.title}</b> <span class="badge ${priColors[t.priority]||'badge-amber'}" style="margin-left:4px;">${t.priority}</span></div>
+          ${t.status==='done'?'<span class="badge badge-green">✅ Done</span>':
+            `<button class="btn btn-sm btn-green" onclick="bcMarkTaskDone('${t.id}')">✅ Mark Done</button>`}
+        </div>
+        <div style="font-size:11px;color:var(--gray-600);margin-top:3px;">Due: ${t.dueDate?fmtDate(t.dueDate):'—'} ${overdue?'⚠ OVERDUE':''} ${t.desc?'· '+t.desc:''}</div>
+      </div>`;
+    }).join('');
+    html+=`</div>`;
+  }
+
+  if(!targets.length&&!tasks.length){
+    html='<p class="text-muted">No targets or tasks assigned yet.</p>';
+  }
+
+  // Show in BC page
+  let card=document.getElementById('bcTargetsCard');
+  if(!card){
+    const bcMain=document.querySelector('#bcPage .main');
+    const newCard=document.createElement('div');
+    newCard.className='card';
+    newCard.id='bcTargetsCard';
+    newCard.innerHTML=`<div class="card-title">🎯 My Targets & Tasks</div><div id="bcTargetsBody"></div>`;
+    bcMain.insertBefore(newCard, bcMain.children[1]);
+  }
+  document.getElementById('bcTargetsBody').innerHTML=html;
+}
+
+function bcMarkTaskDone(id){
+  markTaskDone(id);
+  renderBCTargetsAndTasks();
+  showToast('✅ Task marked as completed!');
+}
+
+// ── DC VIEW: Targets & Tasks for their BCs ──
+function renderDCTargetsAndTasks(){
+  const myBCs=CACHE.users.filter(u=>u.role==='BC'&&u.district===CU.district).map(u=>u.id);
+  const targets=getLocal(KEY_TARGETS).filter(t=>
+    myBCs.includes(t.assignee)||t.assignType==='ALL_BC'||
+    (t.assignType==='DISTRICT'&&t.assignee===CU.district)
+  );
+  const tasks=getLocal(KEY_TASKS).filter(t=>
+    myBCs.includes(t.assignee)||t.assignType==='ALL_BC'||
+    (t.assignType==='DISTRICT'&&t.assignee===CU.district)||t.assignee===CU.id
+  );
+
+  let card=document.getElementById('dcTargetsCard');
+  if(!card){
+    const dcMain=document.querySelector('#dcPage .main');
+    const newCard=document.createElement('div');
+    newCard.className='card';
+    newCard.id='dcTargetsCard';
+    newCard.innerHTML=`<div class="card-title flex-between"><span>🎯 Targets & Tasks for My BCs</span></div><div id="dcTargetsBody"></div>`;
+    dcMain.appendChild(newCard);
+  }
+
+  const catIcons={financial:'💰',insurance:'🛡️',pension:'🏛️',kyc:'🪪',field:'🏕️',other:'📌'};
+  let html='';
+  if(targets.length){
+    html+=`<div style="margin-bottom:14px;font-weight:700;color:var(--navy);">🎯 ${targets.length} Targets assigned</div>`;
+    html+=targets.map(t=>`<div style="background:var(--gray-50);border-radius:8px;padding:9px 12px;margin-bottom:7px;border-left:3px solid var(--green);display:flex;justify-content:space-between;">
+      <div><b>${t.name}</b><div style="font-size:11px;color:var(--gray-600);">${t.assignee||'All BCs'} · ${t.period} · ${catIcons[t.category]||''}</div></div>
+      <div style="font-size:20px;font-weight:800;color:var(--navy);">${t.value}</div>
+    </div>`).join('');
+  }
+  if(tasks.length){
+    const pending=tasks.filter(t=>t.status==='pending').length;
+    html+=`<div style="margin:14px 0 10px;font-weight:700;color:var(--navy);">📋 ${tasks.length} Tasks · ${pending} pending</div>`;
+    html+=tasks.map(t=>`<div style="background:var(--gray-50);border-radius:8px;padding:9px 12px;margin-bottom:7px;border-left:3px solid ${t.status==='done'?'var(--green)':'var(--blue)'};">
+      <div style="display:flex;justify-content:space-between;"><b>${t.title}</b>${t.status==='done'?'<span class="badge badge-green">✅</span>':'<span class="badge badge-red">⏳</span>'}</div>
+      <div style="font-size:11px;color:var(--gray-600);">${t.assignee||'All BCs'} · Due: ${t.dueDate?fmtDate(t.dueDate):'—'}</div>
+    </div>`).join('');
+  }
+  if(!targets.length&&!tasks.length) html='<p class="text-muted">No targets or tasks assigned to your BCs yet.</p>';
+  document.getElementById('dcTargetsBody').innerHTML=html;
+}
+
 function toggleAddDC(){
   const f=document.getElementById('addDCForm');
   f.style.display=f.style.display==='none'?'block':'none';
@@ -1066,11 +1576,16 @@ function renderDCList() {
 }
 
 function switchAdminTab(tab) {
-  ['overview','alerts','dclist','bclist','settings'].forEach(t=>document.getElementById('tab-'+t).style.display=t===tab?'block':'none');
-  document.querySelectorAll('#adminPage .tab-btn').forEach((b,i)=>b.classList.toggle('active',['overview','alerts','dclist','bclist','settings'][i]===tab));
+  ['overview','alerts','dclist','bclist','targets','tasks','settings'].forEach(t=>{
+    const el=document.getElementById('tab-'+t);
+    if(el) el.style.display=t===tab?'block':'none';
+  });
+  document.querySelectorAll('#adminPage .tab-btn').forEach((b,i)=>b.classList.toggle('active',['overview','alerts','dclist','bclist','targets','tasks','settings'][i]===tab));
   if(tab==='alerts') renderAlerts();
   if(tab==='dclist') renderDCList();
   if(tab==='bclist') renderBCList();
+  if(tab==='targets') renderTargetList();
+  if(tab==='tasks') renderTaskList();
   if(tab==='settings'){renderParams();loadTemplates();}
 }
 

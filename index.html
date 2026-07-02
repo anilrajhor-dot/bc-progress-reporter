@@ -1082,15 +1082,15 @@ function dlCSV(csv,name){
 
 // On load — try to restore config
 window.addEventListener('load', async () => {
-  // Auto-connect to Google Sheets
+  // Auto-connect to Google Sheets — pre-configured
   BACKEND = 'sheets';
-  SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxstyO63SCA5O4UUH_5QB2BWo9-nWLTd6_VzU2EG08YEkM3K-hyhprhmscYw3dYMbA/exec';
+  SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyr_8s2nJarjQNQguaO_zmZMRlPG3FIJpwhPE1M9UyTy_ayXfFSOF7boW95FGpQXoJO/exec';
   set('bc_backend_config', { type:'sheets', sheetsUrl:SHEETS_URL });
 
   window.addEventListener('online',()=>document.querySelectorAll('.offline-warn').forEach(el=>el.style.display='none'));
   window.addEventListener('offline',()=>document.querySelectorAll('.offline-warn').forEach(el=>el.style.display='block'));
 
-  // Auto-initialize
+  // Auto-initialize — skip setup screen
   showLoading('Connecting...');
   try {
     const [pr, tr] = await Promise.all([apiGetParams(), apiGetTemplates()]);
@@ -1104,7 +1104,7 @@ window.addEventListener('load', async () => {
     document.getElementById('appHeader').style.display = 'block';
   } catch(e) {
     hideLoading();
-    showToast('❌ Connection error. Check internet.');
+    showToast('❌ Connection error. Check internet and try again.');
   }
 });
 </script>

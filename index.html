@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- Version: firebase-v1 -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1a3a5c">
 <title>BC Progress Reporter — Cloud Version</title>
@@ -164,7 +168,16 @@ tr:hover td{background:var(--sky);}
 </div>
 
 <!-- ══ SETUP PAGE ══ -->
-<div id="setupPage" class="page active">
+<!-- AUTO-LOADING SCREEN - shows while connecting -->
+<div id="autoLoadPage" class="page active" style="min-height:100vh;background:linear-gradient(160deg,#0f2744,#1a3a5c 50%,#2563eb);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;">
+  <div style="width:70px;height:70px;background:rgba(255,255,255,.15);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:36px;">🏦</div>
+  <div style="color:#fff;font-size:22px;font-weight:800;font-family:inherit;">BC Progress Reporter</div>
+  <div style="color:#BAD5F5;font-size:14px;">Connecting to Firebase...</div>
+  <div style="width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;margin-top:8px;"></div>
+  <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+</div>
+
+<div id="setupPage" class="page">
 <div class="setup-wrap">
 <div class="setup-card">
   <div class="setup-logo">🏦</div>
@@ -437,7 +450,8 @@ tr:hover td{background:var(--sky);}
             <select id="tgtAssignee"><option value="">-- Select --</option></select>
           </div>
           <div class="form-group"><label>Target Name</label>
-            <input type="text" id="tgtName" placeholder="e.g. Accounts Opened" />
+            <select id="tgtNameSelect" onchange="if(this.value){document.getElementById('tgtName').value=this.value;}" style="margin-bottom:6px;width:100%;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;"></select>
+            <input type="text" id="tgtName" placeholder="Or type custom target name..." />
           </div>
           <div class="form-group"><label>Target Value</label>
             <input type="number" id="tgtValue" placeholder="e.g. 50" min="1" />
@@ -455,14 +469,7 @@ tr:hover td{background:var(--sky);}
             <input type="month" id="tgtMonth" />
           </div>
           <div class="form-group"><label>Category</label>
-            <select id="tgtCategory">
-              <option value="financial">💰 Financial Inclusion</option>
-              <option value="insurance">🛡️ Insurance</option>
-              <option value="pension">🏛️ Pension</option>
-              <option value="kyc">🪪 KYC/Documentation</option>
-              <option value="field">🏕️ Field Activity</option>
-              <option value="other">📌 Other</option>
-            </select>
+            <select id="tgtCategory"></select>
           </div>
           <div class="form-group"><label>Remarks</label>
             <input type="text" id="tgtRemarks" placeholder="Optional note..." />
@@ -526,15 +533,7 @@ tr:hover td{background:var(--sky);}
             <input type="text" id="taskTitle" placeholder="e.g. Conduct Financial Literacy Camp" />
           </div>
           <div class="form-group"><label>Task Type</label>
-            <select id="taskType">
-              <option value="camp">🏕️ Camp/Mela</option>
-              <option value="visit">🚶 Field Visit</option>
-              <option value="meeting">👥 Meeting</option>
-              <option value="collection">📁 Document Collection</option>
-              <option value="report">📊 Report Submission</option>
-              <option value="training">🎓 Training</option>
-              <option value="other">📌 Other</option>
-            </select>
+            <select id="taskType"></select>
           </div>
           <div class="form-group"><label>Due Date</label>
             <input type="date" id="taskDueDate" />
@@ -597,6 +596,44 @@ tr:hover td{background:var(--sky);}
       <div class="form-group"><label>WhatsApp Template</label><textarea id="waTemplate" style="width:100%;padding:9px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:12px;height:70px;resize:vertical;"></textarea></div>
       <div class="form-group"><label>Email Template</label><textarea id="emailTemplate" style="width:100%;padding:9px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:12px;height:70px;resize:vertical;"></textarea></div>
       <button class="btn btn-primary" style="width:auto;" onclick="saveTemplates()">💾 Save Templates</button>
+    </div>
+
+    <!-- CUSTOM TASK TYPES -->
+    <div class="card">
+      <div class="card-title">📋 Custom Task Types</div>
+      <p class="text-muted" style="margin-bottom:12px;">Add your own task types that appear in the Task Allocation form.</p>
+      <div id="taskTypesList"></div>
+      <div class="divider"></div>
+      <div class="flex-row" style="margin-top:6px;">
+        <input type="text" id="newTaskTypeIcon" placeholder="🏕️" style="width:50px;padding:8px;border:1.5px solid var(--gray-200);border-radius:8px;text-align:center;" />
+        <input type="text" id="newTaskTypeName" placeholder="New task type name..." style="flex:1;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;" />
+        <button class="btn btn-blue btn-sm" style="background:var(--blue);color:#fff;" onclick="addCustomTaskType()">＋ Add</button>
+      </div>
+    </div>
+
+    <!-- CUSTOM TARGET CATEGORIES -->
+    <div class="card">
+      <div class="card-title">🎯 Custom Target Categories</div>
+      <p class="text-muted" style="margin-bottom:12px;">Add your own target categories that appear in the Target Allocation form.</p>
+      <div id="targetCatsList"></div>
+      <div class="divider"></div>
+      <div class="flex-row" style="margin-top:6px;">
+        <input type="text" id="newTargetCatIcon" placeholder="💰" style="width:50px;padding:8px;border:1.5px solid var(--gray-200);border-radius:8px;text-align:center;" />
+        <input type="text" id="newTargetCatName" placeholder="New category name..." style="flex:1;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;" />
+        <button class="btn btn-green btn-sm" onclick="addCustomTargetCat()">＋ Add</button>
+      </div>
+    </div>
+
+    <!-- CUSTOM TARGET NAMES -->
+    <div class="card">
+      <div class="card-title">📌 Custom Target Names</div>
+      <p class="text-muted" style="margin-bottom:12px;">Add preset target names so you can quickly select them when assigning targets.</p>
+      <div id="targetNamesList"></div>
+      <div class="divider"></div>
+      <div class="flex-row" style="margin-top:6px;">
+        <input type="text" id="newTargetNameInput" placeholder="Target name e.g. PMJDY Accounts Opened..." style="flex:1;padding:8px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:inherit;" />
+        <button class="btn btn-purple btn-sm" onclick="addCustomTargetName()">＋ Add</button>
+      </div>
     </div>
   </div>
 </div>
@@ -694,14 +731,39 @@ function showSetup() { showPage('setupPage'); }
 //  GOOGLE SHEETS API
 // ═══════════════════════════════════════════
 async function sheetsAPI(body) {
-  const res = await fetch(SHEETS_URL, {
-    method:'POST', redirect:'follow',
-    headers:{'Content-Type':'text/plain'},
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+  // POST to Google Apps Script — works on all browsers including Safari
+  const formData = new URLSearchParams();
+  formData.append('payload', JSON.stringify(body));
+  
+  try {
+    const res = await fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString(),
+      redirect: 'follow'
+    });
+    const text = await res.text();
+    // Extract JSON even if wrapped in HTML
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    return JSON.parse(text);
+  } catch(e) {
+    // Fallback: try with text/plain content type
+    const res2 = await fetch(SHEETS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(body),
+      redirect: 'follow'
+    });
+    const text2 = await res2.text();
+    const jsonMatch2 = text2.match(/\{[\s\S]*\}/);
+    if (jsonMatch2) return JSON.parse(jsonMatch2[0]);
+    return JSON.parse(text2);
+  }
 }
+
+
+// Better approach - use script tag injection (JSONP style)
 
 // ═══════════════════════════════════════════
 //  FIREBASE API (REST — no SDK needed)
@@ -1198,6 +1260,44 @@ function populateDistrictDropdowns() {
 // ═══════════════════════════════════
 const KEY_TARGETS = 'bc_targets';
 const KEY_TASKS = 'bc_tasks';
+const KEY_TASK_TYPES = 'bc_task_types';
+const KEY_TARGET_CATS = 'bc_target_cats';
+const KEY_TARGET_NAMES = 'bc_target_names';
+
+// Default task types
+const DEFAULT_TASK_TYPES = [
+  {id:'camp', icon:'🏕️', name:'Camp/Mela'},
+  {id:'visit', icon:'🚶', name:'Field Visit'},
+  {id:'meeting', icon:'👥', name:'Meeting'},
+  {id:'collection', icon:'📁', name:'Document Collection'},
+  {id:'report', icon:'📊', name:'Report Submission'},
+  {id:'training', icon:'🎓', name:'Training'},
+  {id:'other', icon:'📌', name:'Other'},
+];
+
+// Default target categories
+const DEFAULT_TARGET_CATS = [
+  {id:'financial', icon:'💰', name:'Financial Inclusion'},
+  {id:'insurance', icon:'🛡️', name:'Insurance'},
+  {id:'pension', icon:'🏛️', name:'Pension'},
+  {id:'kyc', icon:'🪪', name:'KYC/Documentation'},
+  {id:'field', icon:'🏕️', name:'Field Activity'},
+  {id:'other', icon:'📌', name:'Other'},
+];
+
+function getTaskTypes() {
+  const custom = getLocal(KEY_TASK_TYPES);
+  return [...DEFAULT_TASK_TYPES, ...custom];
+}
+
+function getTargetCats() {
+  const custom = getLocal(KEY_TARGET_CATS);
+  return [...DEFAULT_TARGET_CATS, ...custom];
+}
+
+function getTargetNames() {
+  return getLocal(KEY_TARGET_NAMES);
+}
 const getLocal = k => { try{return JSON.parse(localStorage.getItem(k))||[];}catch{return[];} };
 const setLocal = (k,v) => localStorage.setItem(k,JSON.stringify(v));
 
@@ -1206,10 +1306,11 @@ function toggleAddTarget(){
   const f=document.getElementById('addTargetForm');
   f.style.display=f.style.display==='none'?'block':'none';
   if(f.style.display==='block'){
-    // Set default month to current
     const now=new Date();
     document.getElementById('tgtMonth').value=now.toISOString().slice(0,7);
     updateTargetAssignee();
+    populateTargetCatSelect();
+    populateTargetNamesSelect();
   }
 }
 
@@ -1314,6 +1415,7 @@ function toggleAddTask(){
   if(f.style.display==='block'){
     document.getElementById('taskDueDate').value=today();
     updateTaskAssignee();
+    populateTaskTypeSelect();
   }
 }
 
@@ -1704,6 +1806,134 @@ function exportCSV(){
 // ═══════════════════════════════════════════
 //  PARAMS & TEMPLATES
 // ═══════════════════════════════════════════
+// ── CUSTOM TASK TYPES MANAGEMENT ──
+function renderTaskTypesList() {
+  const custom = getLocal(KEY_TASK_TYPES);
+  const el = document.getElementById('taskTypesList');
+  if(!el) return;
+  let html = '';
+  // Show defaults (non-deletable)
+  DEFAULT_TASK_TYPES.forEach(t=>{
+    html+=`<div class="scheme-param"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">${t.icon}</span><div><div style="font-weight:600;">${t.name}</div><div class="text-muted">Default</div></div></div><span class="badge badge-green">Built-in</span></div>`;
+  });
+  // Show custom (deletable)
+  custom.forEach((t,i)=>{
+    html+=`<div class="scheme-param"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">${t.icon}</span><div><div style="font-weight:600;">${t.name}</div><div class="text-muted">Custom</div></div></div><button class="btn btn-sm btn-red" onclick="deleteCustomTaskType(${i})">✕ Remove</button></div>`;
+  });
+  el.innerHTML = html || '<p class="text-muted">No custom types yet.</p>';
+  populateTaskTypeSelect();
+}
+
+function addCustomTaskType(){
+  const icon=document.getElementById('newTaskTypeIcon').value.trim()||'📌';
+  const name=document.getElementById('newTaskTypeName').value.trim();
+  if(!name){showToast('❌ Name required');return;}
+  const custom=getLocal(KEY_TASK_TYPES);
+  const id='custom_'+Date.now();
+  custom.push({id,icon,name});
+  setLocal(KEY_TASK_TYPES,custom);
+  document.getElementById('newTaskTypeName').value='';
+  document.getElementById('newTaskTypeIcon').value='';
+  renderTaskTypesList();
+  showToast('✅ Task type "'+name+'" added');
+}
+
+function deleteCustomTaskType(i){
+  const custom=getLocal(KEY_TASK_TYPES);
+  const removed=custom.splice(i,1)[0];
+  setLocal(KEY_TASK_TYPES,custom);
+  renderTaskTypesList();
+  showToast('🗑 "'+removed.name+'" removed');
+}
+
+function populateTaskTypeSelect(){
+  const sel=document.getElementById('taskType');
+  if(!sel) return;
+  const types=getTaskTypes();
+  sel.innerHTML=types.map(t=>`<option value="${t.id}">${t.icon} ${t.name}</option>`).join('');
+}
+
+// ── CUSTOM TARGET CATEGORIES MANAGEMENT ──
+function renderTargetCatsList() {
+  const custom = getLocal(KEY_TARGET_CATS);
+  const el = document.getElementById('targetCatsList');
+  if(!el) return;
+  let html = '';
+  DEFAULT_TARGET_CATS.forEach(t=>{
+    html+=`<div class="scheme-param"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">${t.icon}</span><div><div style="font-weight:600;">${t.name}</div><div class="text-muted">Default</div></div></div><span class="badge badge-green">Built-in</span></div>`;
+  });
+  custom.forEach((t,i)=>{
+    html+=`<div class="scheme-param"><div style="display:flex;align-items:center;gap:8px;"><span style="font-size:18px;">${t.icon}</span><div><div style="font-weight:600;">${t.name}</div><div class="text-muted">Custom</div></div></div><button class="btn btn-sm btn-red" onclick="deleteCustomTargetCat(${i})">✕ Remove</button></div>`;
+  });
+  el.innerHTML = html;
+  populateTargetCatSelect();
+}
+
+function addCustomTargetCat(){
+  const icon=document.getElementById('newTargetCatIcon').value.trim()||'📌';
+  const name=document.getElementById('newTargetCatName').value.trim();
+  if(!name){showToast('❌ Name required');return;}
+  const custom=getLocal(KEY_TARGET_CATS);
+  custom.push({id:'cat_'+Date.now(),icon,name});
+  setLocal(KEY_TARGET_CATS,custom);
+  document.getElementById('newTargetCatName').value='';
+  document.getElementById('newTargetCatIcon').value='';
+  renderTargetCatsList();
+  showToast('✅ Category "'+name+'" added');
+}
+
+function deleteCustomTargetCat(i){
+  const custom=getLocal(KEY_TARGET_CATS);
+  const removed=custom.splice(i,1)[0];
+  setLocal(KEY_TARGET_CATS,custom);
+  renderTargetCatsList();
+  showToast('🗑 "'+removed.name+'" removed');
+}
+
+function populateTargetCatSelect(){
+  const sel=document.getElementById('tgtCategory');
+  if(!sel) return;
+  const cats=getTargetCats();
+  sel.innerHTML=cats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+}
+
+// ── CUSTOM TARGET NAMES MANAGEMENT ──
+function renderTargetNamesList(){
+  const names=getLocal(KEY_TARGET_NAMES);
+  const el=document.getElementById('targetNamesList');
+  if(!el) return;
+  if(!names.length){el.innerHTML='<p class="text-muted">No preset target names yet.</p>';populateTargetNamesSelect();return;}
+  el.innerHTML=names.map((n,i)=>`<div class="scheme-param"><div style="font-weight:600;">${n}</div><button class="btn btn-sm btn-red" onclick="deleteTargetName(${i})">✕</button></div>`).join('');
+  populateTargetNamesSelect();
+}
+
+function addCustomTargetName(){
+  const name=document.getElementById('newTargetNameInput').value.trim();
+  if(!name){showToast('❌ Name required');return;}
+  const names=getLocal(KEY_TARGET_NAMES);
+  if(names.includes(name)){showToast('❌ Already exists');return;}
+  names.push(name);
+  setLocal(KEY_TARGET_NAMES,names);
+  document.getElementById('newTargetNameInput').value='';
+  renderTargetNamesList();
+  showToast('✅ "'+name+'" added');
+}
+
+function deleteTargetName(i){
+  const names=getLocal(KEY_TARGET_NAMES);
+  const removed=names.splice(i,1)[0];
+  setLocal(KEY_TARGET_NAMES,names);
+  renderTargetNamesList();
+  showToast('🗑 "'+removed+'" removed');
+}
+
+function populateTargetNamesSelect(){
+  const sel=document.getElementById('tgtNameSelect');
+  if(!sel) return;
+  const names=getLocal(KEY_TARGET_NAMES);
+  sel.innerHTML='<option value="">-- Select preset name or type below --</option>'+names.map(n=>`<option value="${n}">${n}</option>`).join('');
+}
+
 function renderParams() {
   const params=CACHE.params;
   document.getElementById('paramsList').innerHTML=params.map((p,i)=>`
@@ -1735,6 +1965,9 @@ async function removeParam(i) {
 function loadTemplates(){
   document.getElementById('waTemplate').value=CACHE.templates.wa||'';
   document.getElementById('emailTemplate').value=CACHE.templates.email||'';
+  renderTaskTypesList();
+  renderTargetCatsList();
+  renderTargetNamesList();
 }
 async function saveTemplates(){
   const tpl={wa:document.getElementById('waTemplate').value,email:document.getElementById('emailTemplate').value};
@@ -1746,7 +1979,7 @@ async function saveTemplates(){
 //  UTILS
 // ═══════════════════════════════════════════
 function showPage(id) {
-  ['setupPage','loginPage','bcPage','dcPage','adminPage'].forEach(p=>{
+  ['autoLoadPage','setupPage','loginPage','bcPage','dcPage','adminPage'].forEach(p=>{
     const el=document.getElementById(p);
     if(el) el.classList.toggle('active',p===id);
   });
@@ -1766,29 +1999,50 @@ function dlCSV(csv,name){
 
 // On load — try to restore config
 window.addEventListener('load', async () => {
-  // Auto-connect to Google Sheets — pre-configured
-  BACKEND = 'sheets';
-  SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyr_8s2nJarjQNQguaO_zmZMRlPG3FIJpwhPE1M9UyTy_ayXfFSOF7boW95FGpQXoJO/exec';
-  set('bc_backend_config', { type:'sheets', sheetsUrl:SHEETS_URL });
+  // Auto-connect to Firebase — pre-configured
+  BACKEND = 'firebase';
+  FB_CONFIG = {
+    apiKey: "AIzaSyBezbK3xLyonRu3lxaVVm2_Or81JCWBjcw",
+    authDomain: "bc-progress-reprter.firebaseapp.com",
+    projectId: "bc-progress-reprter",
+    storageBucket: "bc-progress-reprter.firebasestorage.app",
+    messagingSenderId: "317484913520",
+    appId: "1:317484913520:web:cdefba95cdac79f55b35b5"
+  };
+  set('bc_backend_config', { type:'firebase', fbConfig:FB_CONFIG });
 
   window.addEventListener('online',()=>document.querySelectorAll('.offline-warn').forEach(el=>el.style.display='none'));
   window.addEventListener('offline',()=>document.querySelectorAll('.offline-warn').forEach(el=>el.style.display='block'));
+
+  function goToLogin(params, templates) {
+    CACHE.params = params || [{id:'accounts',label:'Accounts Opened',icon:'🏦'},{id:'pmjjby',label:'PMJJBY Enrolled',icon:'🛡️'},{id:'pmsby',label:'PMSBY Enrolled',icon:'⛑️'},{id:'apy',label:'APY Enrolled',icon:'🏛️'},{id:'rekyc',label:'Re-KYC Done',icon:'🪪'}];
+    CACHE.templates = templates || {};
+    hideLoading();
+    showPage('loginPage');
+    document.getElementById('loginBackendLabel').textContent = '🔥 Connected to Firebase';
+    document.getElementById('cloudBadge').textContent = '🔥 Firebase';
+    document.getElementById('cloudBadge').className = 'cloud-badge firebase-badge';
+    document.getElementById('appHeader').style.display = 'block';
+  }
 
   // Auto-initialize — skip setup screen
   showLoading('Connecting...');
   try {
     const [pr, tr] = await Promise.all([apiGetParams(), apiGetTemplates()]);
-    CACHE.params = pr; CACHE.templates = tr;
-    hideLoading();
-    document.getElementById('setupPage').classList.remove('active');
-    showPage('loginPage');
-    document.getElementById('loginBackendLabel').textContent = '📊 Connected to Google Sheets';
-    document.getElementById('cloudBadge').textContent = '📊 Sheets';
-    document.getElementById('cloudBadge').className = 'cloud-badge sheets-badge';
-    document.getElementById('appHeader').style.display = 'block';
+    goToLogin(pr, tr);
   } catch(e) {
-    hideLoading();
-    showToast('❌ Connection error. Check internet and try again.');
+    console.warn('Auto-connect error:', e.message);
+    // Try once more after short delay
+    setTimeout(async () => {
+      try {
+        const [pr, tr] = await Promise.all([apiGetParams(), apiGetTemplates()]);
+        goToLogin(pr, tr);
+      } catch(e2) {
+        // Go to login anyway with defaults — data will load on demand
+        goToLogin(null, null);
+        showToast('⚠ Connected with defaults. Data loads on login.');
+      }
+    }, 2000);
   }
 });
 </script>
